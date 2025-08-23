@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>AI Tutor - Subir Contenido</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <style type="text/tailwindcss">
+    :root {
+      --primary-color: #3b82f6;--accent-color: #10b981;--text-primary: #f3f4f6;--text-secondary: #9ca3af;--background-color: #111827;--container-bg: #1f2937;--border-color: #374151;}
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-primary);
+    }
+    .primary-bg { background-color: var(--primary-color); }
+    .primary-text { color: var(--primary-color); }
+    .accent-bg { background-color: var(--accent-color); }
+    .accent-text { color: var(--accent-color); }
+  </style>
+</head>
+<body>
+<div class="flex min-h-screen">
+  <aside class="w-64 bg-[var(--container-bg)] shadow-md flex-shrink-0">
+    <div class="p-6">
+      <h1 class="text-2xl font-bold primary-text">AI Tutor</h1>
+    </div>
+    <nav class="mt-6">
+    <a class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700" href="#">
+    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </svg>
+    <span class="ml-4 font-medium">Inicio</span>
+    </a>
+    <a class="flex items-center px-6 py-3 bg-gray-700 primary-text" href="#">
+    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </svg>
+    <span class="ml-4 font-bold">Subir Contenido</span>
+    </a>
+    <a class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700" href="/">
+    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </svg>
+    <span class="ml-4 font-medium">Interacción con Tutor</span>
+    </a>
+    <a class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700" href="test">
+    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </svg>
+    <span class="ml-4 font-medium">Evaluaciones</span>
+    </a>
+    <a class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700" href="#">
+    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </svg>
+    <span class="ml-4 font-medium">Panel de Usuario</span>
+    </a>
+    <a class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700" href="#">
+    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </svg>
+    <span class="ml-4 font-medium">Panel de Administrador</span>
+    </a>
+    </nav>
+    <div class="absolute bottom-0 left-0 w-64 p-6">
+    <a class="flex items-center text-gray-300 hover:bg-gray-700 px-6 py-3" href="#">
+    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+    </svg>
+    <span class="ml-4 font-medium">Logout</span>
+    </a>
+    </div>
+    </aside>
+  <main class="flex-1 p-8">
+    <div class="max-w-4xl mx-auto">
+      <header class="mb-8">
+        <h2 class="text-4xl font-bold text-[var(--text-primary)]">Upload Content of topic</h2>
+        <p class="text-[var(--text-secondary)] mt-2">Upload and manage files for AI Tutor.</p>
+      </header>
+      <div>
+        <h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">Topic Selection</h2>
+        <select id="topic" name="topic" class="w-full rounded-lg border-[var(--border-color)] bg-gray-700 text-[var(--text-primary)] focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] p-3">
+        <option value="Introduction to Machine Learning">Introduction to Machine Learning</option>
+        <option value="Supervised Learning">Supervised Learning</option>
+        <option value="Unsupervised Learning">Unsupervised Learning</option>
+        <option value="Neural Networks & Deep Learning">Neural Networks & Deep Learning</option>
+        <option value="Experto en Leyes">Experto en Leyes(Abogado de Bolivia) </option>
+        <option value="Como invertir en la bolsa de valores">Como invertir en la bolsa de valores</option>
+        <option value="Operaciones Combinadas (Math)">Operaciones Combinadas</option>
+        <option value="Excel Avanzado">Excel Avanzado</option>
+        <option value="Como encontrar mi persona vitamina (El Libro)">Como encontrar mi persona vitamina</option>
+        <option value="Como meditar 5 min.">Como meditar 5 min</option>
+        <option value="El camino de Santiago">El camino de Santiago</option>
+        </select>
+        <br>
+        </div>
+      <div class="mb-8">
+        <div class="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-[var(--border-color)] rounded-lg cursor-pointer bg-[var(--container-bg)] hover:bg-gray-700 transition-colors" id="dropzone">
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <svg class="w-10 h-10 mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            <p class="mb-2 text-lg font-semibold text-gray-400">Drag and Drop files here</p>
+            <p class="text-sm text-gray-500">or <span class="font-semibold primary-text" id="browse-span">click to browse</span></p>
+            <p class="mt-2 text-xs text-gray-500">PDF, DOCX, PPTX, TXT (MAX. 50MB)</p>
+          </div>
+          <input class="hidden" id="dropzone-file" multiple type="file"/>
+        </div>
+      </div>
+      <div class="bg-[var(--container-bg)] rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-[var(--border-color)]">
+          <h3 class="text-xl font-semibold text-[var(--text-primary)]">Files Uploaded</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-400" id="files-table">
+            <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+              <tr>
+                <th class="px-6 py-3" scope="col">Name of file</th>
+                <th class="px-6 py-3" scope="col">Size</th>
+                <th class="px-6 py-3" scope="col">Topic</th>
+                <th class="px-6 py-3" scope="col">Status</th>
+                <th class="px-6 py-3 text-center" scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="files-tbody">
+              <!-- Archivos se llenan dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex justify-between items-center mt-8">
+        <button 
+          id="clear-all-btn" 
+          class="flex items-center justify-center px-4 py-2 text-white rounded-lg shadow-md transition-colors bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-gray-900"
+          onclick="fileManager.clearAllFiles()"
+          title="Eliminar todos los archivos">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          <span class="font-medium">Clean List</span>
+        </button>
+        <button class="flex items-center justify-center px-6 py-3 text-white rounded-lg shadow-md transition-colors accent-bg hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 focus:ring-offset-gray-900" id="procesar-btn" disabled>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          <span class="font-semibold">Process Files</span>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+// Gestión de archivos con localStorage y subida al servidor
+class FileUploadManager {
+    constructor() {
+        this.files = this.loadFilesFromStorage();
+        this.init();
+    }
+
+    init() {
+        this.renderFilesTable();
+        this.setupEventListeners();
+        this.updateFileCounter();
+    }
+
+    // Cargar archivos desde localStorage
+    loadFilesFromStorage() {
+        return JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+    }
+
+    // Guardar archivos en localStorage
+    saveFilesToStorage() {
+        localStorage.setItem('uploadedFiles', JSON.stringify(this.files));
+    }
+
+    // Renderizar tabla de archivos
+    renderFilesTable() {
+        const tbody = document.getElementById('files-tbody');
+        tbody.innerHTML = '';
+        
+        this.files.forEach((file, idx) => {
+            let statusColor = 'bg-yellow-900 text-yellow-300';
+            if (file.status === 'Procesado') statusColor = 'bg-green-900 text-green-300';
+            if (file.status === 'Error') statusColor = 'bg-red-900 text-red-300';
+            if (file.status === 'Subiendo...') statusColor = 'bg-blue-900 text-blue-300';
+            if (file.status === 'Procesando...') statusColor = 'bg-purple-900 text-purple-300';
+            
+            tbody.innerHTML += `<tr class="border-b bg-[var(--container-bg)] border-[var(--border-color)] hover:bg-gray-700">
+                <td class="px-6 py-4 font-medium text-white whitespace-nowrap" title="${file.name}">${this.truncateFileName(file.name)}</td>
+                <td class="px-6 py-4">${file.size}</td>
+                <td class="px-6 py-4"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-900 text-indigo-300">${file.topic}</span></td>
+                <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">${file.status}</span></td>
+                <td class="px-6 py-4 text-center">
+                    <button class="font-medium text-blue-400 hover:underline mr-4" onclick="fileManager.viewFile(${idx})" ${file.status === 'Subiendo...' || file.status === 'Procesando...' ? 'disabled' : ''}>Ver</button>
+                    <button class="font-medium text-red-400 hover:underline" onclick="fileManager.deleteFile(${idx})" ${file.status === 'Subiendo...' || file.status === 'Procesando...' ? 'disabled' : ''}>Eliminar</button>
+                </td>
+            </tr>`;
+        });
+        
+        document.getElementById('procesar-btn').disabled = this.files.length === 0;
+        this.updateFileCounter();
+    }
+
+    // Truncar nombre de archivo si es muy largo
+    truncateFileName(fileName) {
+        if (fileName.length > 30) {
+            const ext = fileName.split('.').pop();
+            const name = fileName.substring(0, fileName.lastIndexOf('.'));
+            return name.substring(0, 25) + '...' + ext;
+        }
+        return fileName;
+    }
+
+    // Actualizar contador de archivos
+    updateFileCounter() {
+        const counter = document.getElementById('file-counter');
+        if (counter) {
+            counter.textContent = `${this.files.length} archivo(s)`;
+        }
+    }
+
+    // Configurar event listeners
+    setupEventListeners() {
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('dropzone-file');
+        const browseSpan = document.getElementById('browse-span');
+
+        // Click events
+        dropzone.addEventListener('click', () => fileInput.click());
+        browseSpan.addEventListener('click', (e) => { 
+            e.stopPropagation(); 
+            fileInput.click(); 
+        });
+
+        // Drag and drop
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('ring-2', 'ring-blue-500', 'bg-gray-600');
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('ring-2', 'ring-blue-500', 'bg-gray-600');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('ring-2', 'ring-blue-500', 'bg-gray-600');
+            
+            if (e.dataTransfer.files.length) {
+                this.handleFileUpload(e.dataTransfer.files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (fileInput.files.length) {
+                this.handleFileUpload(fileInput.files[0]);
+            }
+        });
+
+        // Procesar archivos button
+        document.getElementById('procesar-btn').addEventListener('click', () => {
+            this.processAllFiles();
+        });
+    }
+
+    // Manejar subida de archivo
+    async handleFileUpload(file) {
+        const topic = document.getElementById('topic').value;
+        
+        // Validar tipo de archivo
+        const allowedTypes = ['.pdf', '.txt', '.docx', '.md', '.csv', '.json'];
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedTypes.includes(fileExt)) {
+            alert(`Tipo de archivo no permitido. Tipos permitidos: ${allowedTypes.join(', ')}`);
+            return;
+        }
+
+        // Validar tamaño (máximo 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('El archivo es demasiado grande. Tamaño máximo: 10MB');
+            return;
+        }
+
+        // Crear entrada en localStorage inmediatamente
+        const fileEntry = {
+            name: file.name,
+            size: this.formatFileSize(file.size),
+            topic: topic,
+            status: 'Subiendo...',
+            uploadDate: new Date().toISOString(),
+            id: Date.now() + Math.random()
+        };
+
+        this.files.push(fileEntry);
+        this.saveFilesToStorage();
+        this.renderFilesTable();
+
+        // Subir archivo al servidor
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('topic', topic);
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            // Actualizar estado del archivo
+            const fileIndex = this.files.findIndex(f => f.id === fileEntry.id);
+            if (fileIndex !== -1) {
+                if (result.success) {
+                    this.files[fileIndex].status = 'Pendiente';
+                    this.files[fileIndex].serverPath = result.filePath || '';
+                    this.showNotification('✅ Archivo subido correctamente', 'success');
+                } else {
+                    this.files[fileIndex].status = 'Error';
+                    this.showNotification('❌ Error al subir archivo: ' + (result.error || 'Error desconocido'), 'error');
+                }
+            }
+
+        } catch (error) {
+            // Actualizar estado a error
+            const fileIndex = this.files.findIndex(f => f.id === fileEntry.id);
+            if (fileIndex !== -1) {
+                this.files[fileIndex].status = 'Error';
+            }
+            this.showNotification('❌ Error de conexión: ' + error.message, 'error');
+        }
+
+        this.saveFilesToStorage();
+        this.renderFilesTable();
+    }
+
+    // Formatear tamaño de archivo
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Ver archivo
+    viewFile(index) {
+        const file = this.files[index];
+        if (file) {
+            let info = `
+Nombre: ${file.name}
+Tamaño: ${file.size}
+Tema: ${file.topic}
+Estado: ${file.status}
+Fecha de subida: ${new Date(file.uploadDate).toLocaleString()}`;
+
+            if (file.pineconeInfo) {
+                info += `
+
+📊 Información de Pinecone:
+- Chunks procesados: ${file.pineconeInfo.chunks}
+- Vectores subidos: ${file.pineconeInfo.vectors}
+- Mensaje: ${file.pineconeInfo.message}`;
+            }
+
+            if (file.error) {
+                info += `
+
+❌ Error: ${file.error}`;
+            }
+
+            alert('Información del archivo:\n' + info);
+        }
+    }
+
+    // Eliminar archivo
+    deleteFile(index) {
+        const file = this.files[index];
+        if (file && confirm(`¿Estás seguro de que quieres eliminar "${file.name}"?`)) {
+            // Eliminar del servidor si existe
+            if (file.serverPath) {
+                fetch('/api/files', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filePath: file.serverPath })
+                }).catch(error => console.log('Error eliminando archivo del servidor:', error));
+            }
+            
+            // Eliminar del localStorage
+            this.files.splice(index, 1);
+            this.saveFilesToStorage();
+            this.renderFilesTable();
+            this.showNotification('🗑️ Archivo eliminado', 'info');
+        }
+    }
+
+    // Procesar todos los archivos
+    processAllFiles() {
+        const pendingFiles = this.files.filter(f => f.status === 'Pendiente');
+        
+        if (pendingFiles.length === 0) {
+            alert('No hay archivos pendientes para procesar');
+            return;
+        }
+
+        if (confirm(`¿Procesar ${pendingFiles.length} archivo(s) y subirlos a Pinecone?`)) {
+            // Cambiar estado a "Procesando..."
+            pendingFiles.forEach(file => {
+                const fileIndex = this.files.findIndex(f => f.id === file.id);
+                if (fileIndex !== -1) {
+                    this.files[fileIndex].status = 'Procesando...';
+                }
+            });
+            
+            this.saveFilesToStorage();
+            this.renderFilesTable();
+            this.showNotification('🔄 Procesando y subiendo archivos a Pinecone...', 'info');
+            
+            // Llamar al endpoint de procesamiento
+            fetch('/api/process-files', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: pendingFiles
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar estados basado en los resultados
+                    data.results.forEach(result => {
+                        const fileIndex = this.files.findIndex(f => f.name === result.filename);
+                        if (fileIndex !== -1) {
+                            if (result.success) {
+                                this.files[fileIndex].status = 'Procesado';
+                                this.files[fileIndex].pineconeInfo = {
+                                    chunks: result.chunks_processed,
+                                    vectors: result.vectors_uploaded,
+                                    message: result.message
+                                };
+                            } else {
+                                this.files[fileIndex].status = 'Error';
+                                this.files[fileIndex].error = result.error;
+                            }
+                        }
+                    });
+                    
+                    this.saveFilesToStorage();
+                    this.renderFilesTable();
+                    
+                    const message = `✅ Procesamiento completado: ${data.processed_count} exitosos, ${data.error_count} errores`;
+                    this.showNotification(message, data.error_count > 0 ? 'info' : 'success');
+                } else {
+                    // Error general
+                    pendingFiles.forEach(file => {
+                        const fileIndex = this.files.findIndex(f => f.id === file.id);
+                        if (fileIndex !== -1) {
+                            this.files[fileIndex].status = 'Error';
+                            this.files[fileIndex].error = data.error;
+                        }
+                    });
+                    
+                    this.saveFilesToStorage();
+                    this.renderFilesTable();
+                    this.showNotification('❌ Error procesando archivos: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                // Error de conexión
+                pendingFiles.forEach(file => {
+                    const fileIndex = this.files.findIndex(f => f.id === file.id);
+                    if (fileIndex !== -1) {
+                        this.files[fileIndex].status = 'Error';
+                        this.files[fileIndex].error = 'Error de conexión: ' + error.message;
+                    }
+                });
+                
+                this.saveFilesToStorage();
+                this.renderFilesTable();
+                this.showNotification('❌ Error de conexión al procesar archivos', 'error');
+            });
+        }
+    }
+
+    // Mostrar notificación
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 text-white transition-all duration-300 transform translate-x-full`;
+        
+        switch(type) {
+            case 'success': notification.classList.add('bg-green-600'); break;
+            case 'error': notification.classList.add('bg-red-600'); break;
+            case 'info': notification.classList.add('bg-blue-600'); break;
+            default: notification.classList.add('bg-gray-600');
+        }
+        
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        // Animar entrada
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Auto eliminar después de 4 segundos
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
+    }
+
+    // Limpiar todos los archivos
+    clearAllFiles() {
+        if (confirm('¿Estás seguro de que quieres eliminar todos los archivos?')) {
+            this.files = [];
+            this.saveFilesToStorage();
+            this.renderFilesTable();
+            this.showNotification('🧹 Todos los archivos eliminados', 'info');
+        }
+    }
+}
+
+// Inicializar el gestor de archivos
+const fileManager = new FileUploadManager();
+
+// Añadir contador de archivos al header si no existe
+document.addEventListener('DOMContentLoaded', () => {
+    const header = document.querySelector('header p');
+    if (header && !document.getElementById('file-counter')) {
+        const counter = document.createElement('span');
+        counter.id = 'file-counter';
+        counter.className = 'ml-2 px-2 py-1 bg-blue-900 text-blue-300 rounded-full text-xs font-medium';
+        counter.textContent = '0 archivos';
+        header.appendChild(counter);
+    }
+});
+</script>
+</body>
+</html>

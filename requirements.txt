@@ -1,0 +1,13 @@
+azure-core
+azure-ai-inference
+python-dotenv
+flask
+uvicorn
+azure-ai-evaluation
+pinecone
+sentence-transformers
+PyPDF2
+python-docx
+tiktoken
+# Content filtering dependencies
+regex

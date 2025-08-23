@@ -1,0 +1,1903 @@
+    
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Tutor - Chat</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 4px solid #ffd600;
+    border-top: 4px solid #50E3C2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+        :root {
+            --primary-color: #4A90E2;--accent-color: #50E3C2;--background-light: #1A1A1A;--background-dark: #2C2C2C;--text-primary: #EAEAEA;
+            --text-secondary: #9B9B9B;
+            --border-color: #4A4A4A;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-primary);
+        }
+    /* .nav-link: Usar en el HTML: text-[var(--text-primary)] hover:text-[var(--primary-color)] transition-colors duration-300 */
+    /* .chat-bubble: Usar en el HTML: rounded-xl px-4 py-3 max-w-2xl */
+    /* .tutor-bubble: Usar en el HTML: bg-[var(--background-dark)] text-[var(--text-primary)] shadow-sm max-w-2xl */
+    /* .user-bubble: Usar en el HTML: bg-[var(--primary-color)] text-white */
+    /* .groundedness-bar-bg: Usar en el HTML: bg-gray-700 rounded-full h-2.5 */
+    /* .groundedness-bar: Usar en el HTML: bg-[var(--accent-color)] h-2.5 rounded-full */
+    /* .send-button: Usar en el HTML: bg-[var(--primary-color)] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 */
+    /* .icon-button: Usar en el HTML: text-[var(--text-secondary)] hover:text-[var(--primary-color)] transition-colors duration-300 */
+        /* Mejoras visuales para la respuesta del IA Tutor */
+        .chat-bubble.tutor-bubble {
+            background: #232a34;
+            color: #eaf6ff;
+            box-shadow: 0 4px 24px #0004;
+            font-size: 1.12rem;
+            border-radius: 18px;
+            padding: 24px 28px;
+            margin-bottom: 12px;
+            max-width: 100%;
+            animation: fadeInTutor 0.7s;
+            position: relative;
+            overflow-x: auto;
+            max-height: 520px;
+        }
+        @keyframes fadeInTutor {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-bubble.tutor-bubble h1, .chat-bubble.tutor-bubble h2, .chat-bubble.tutor-bubble h3, .chat-bubble.tutor-bubble h4 {
+            color: #ffd600;
+            margin-top: 18px;
+            margin-bottom: 8px;
+        }
+        .chat-bubble.tutor-bubble table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            background: #232323;
+            font-size: 1rem;
+        }
+        .chat-bubble.tutor-bubble th, .chat-bubble.tutor-bubble td {
+            border: 1px solid #444;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        .chat-bubble.tutor-bubble th {
+            background: #232a34;
+            color: #ffd600;
+        }
+        .chat-bubble.tutor-bubble tr:nth-child(even) {
+            background: #222;
+        }
+        .copy-tutor-btn {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: #ffd600;
+            color: #232a34;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 2px 8px #ffd60044;
+            transition: background 0.2s;
+            z-index: 2;
+        }
+        .copy-tutor-btn:hover {
+            background: #ffeb3b;
+        }
+        /* Estilos para tablas Markdown */
+        .chat-bubble table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+        .chat-bubble th, .chat-bubble td {
+            border: 1px solid #444;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .chat-bubble th {
+            background: #232323;
+            color: #ffd600;
+        }
+        .chat-bubble tr:nth-child(even) {
+            background: #222;
+        }
+        
+        /* Estilos para mensajes de contenido filtrado */
+        .chat-bubble.filtered-bubble {
+            background: #2d1b1b;
+            border: 2px solid #ff6b6b;
+            color: #ffcccc;
+            font-weight: 500;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .chat-bubble.error-bubble {
+            background: #1a1a1a;
+            border: 1px solid #666;
+            color: #ff9999;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+</style>
+</head>
+<body>
+
+<div class="flex h-screen flex-col bg-[var(--background-light)]">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-[var(--border-color)] bg-[var(--background-dark)] px-6 py-3 shadow-sm">
+<div class="flex items-center gap-3 text-[var(--primary-color)]">
+<svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"></path></svg>
+<h1 class="text-xl font-bold">AI Tutor</h1>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="nav-link font-medium" href="#">Dashboard</a>
+<a class="nav-link font-medium" href="upload">Content Upload</a>
+<a class="nav-link font-bold text-[var(--primary-color)]" href="#">Tutor Interaction</a>
+<a class="nav-link font-medium" href="#">Evaluations</a>
+<a class="nav-link font-medium" href="#">User Dashboards</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="relative">
+<svg class="h-6 w-6 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span class="absolute -top-1 -right-1 flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-color)] opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-[var(--accent-color)]"></span>
+</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAO77EIPEhvy9sPf_IhpawohEKKA10mE2y37t_x1igifndgGzr-VemIhmNG4yZaBK_KG7K8tD9qGpD0Zd5Q5cUQUTPnSDsdfpSw-8WwZRbd-6950VD2DXX4Gcj4WXwrPNH_wp49KNq6NPZy5GqUFuTs0jSqnfyBIRqUupw3XUUzVjDT44JwX-G7N-zzeDgHcZ6vEHJlmfLEM0TUXfGgz4HOJjs_YLwE3N6lBW8B6D7zrzPA41AWy2d615YnePsBNwq2_3PjX7K6LKw");'></div>
+</div>
+</header>
+<main class="flex flex-1 overflow-hidden">
+<div class="flex flex-1 flex-col p-6" style="padding-bottom:0;">
+<div class="flex flex-col h-full bg-[var(--background-dark)] rounded-xl shadow-md overflow-hidden">
+<div id="canvasMonitor" style="display:none;background:#101820;border-radius:18px;box-shadow:0 4px 24px #2196f344;margin-bottom:0;padding:24px;min-height:220px;max-height:520px;overflow:auto;color:#fff;font-family:'Consolas','SF Pro Display','Segoe UI',Arial,sans-serif;font-size:1.08rem;"></div>
+<div id="response-timer" style="color:#ffd600;font-weight:600;margin-bottom:8px;display:none;"></div>
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 4px solid #ffd600;
+    border-top: 4px solid #50E3C2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+</style>
+<div class="flex-1 overflow-y-auto p-6 space-y-6" style="scroll-behavior: smooth; overflow-anchor: none;">
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-cover bg-center shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuApme4QoQtozt4j9VZTEaiVJjlQYSJ7pTbQjl2Ab8bWeJ-Rfem4Eg4Ea271jU2xx55lNrQGzcd0liGNA9nwTpmt4Gl4-_sOAu_4pvykcaUS89ohZSAmCaRRT4_uTbATEx-V82UlIHedbpc2JBKUElabFJxMYripRyL_u0-vYoPStya4ae3wWZvQPFzF8lu9VL84ZZ3NpIL0eSWNiHGE0YqGi1x9QKTz0pjmhM34wCNlvOzK1u91AECJDY8LEBKHZXQpSS1NQ9tbWcE");'></div>
+<div class="flex flex-col items-start">
+<span class="font-bold text-[var(--text-primary)]">AI Tutor</span>
+<p class="chat-bubble tutor-bubble">
+                                    ¡Hola! Estoy listo para ayudarte. Selecciona un tema del panel derecho para comenzar.
+                                  </p>
+</div>
+</div>
+<div class="flex items-start gap-4 justify-end">
+<div class="flex flex-col items-end">
+<span class="font-bold text-[var(--text-primary)]">You</span>
+<p class="chat-bubble user-bubble">
+                                    ¡Hola! He seleccionado 'Introducción al Machine Learning'. Comencemos con lo básico.
+                                </p>
+</div>
+<div class="w-10 h-10 rounded-full bg-cover bg-center shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBbEjeT8Lccz4LCglC-n_A5-c1Mzb513abAAuZCjr91AQPr58pgjgMcu7ERZl4DdAiD2vJ2cguHqK3GAxZlgrGmsp3cFs0W6kvzHiOniJC0gVG9qkRHsuDjLHYKA7y9bcT1UHgMh-OHvfn0hDIiWyB_l3WD1cbwckIXkKghYKSaXOpi9E2xtqqyun5M9AzYb2SVBSA1srdDZ5JwiPj4jejfnxonaRG0miFHKPB83wKU7OtDJjghhlqAnHUhk1eoAb4ZTpy2ubnPbWs");'></div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-cover bg-center shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuApme4QoQtozt4j9VZTEaiVJjlQYSJ7pTbQjl2Ab8bWeJ-Rfem4Eg4Ea271jU2xx55lNrQGzcd0liGNA9nwTpmt4Gl4-_sOAu_4pvykcaUS89ohZSAmCaRRT4_uTbATEx-V82UlIHedbpc2JBKUElabFJxMYripRyL_u0-vYoPStya4ae3wWZvQPFzF8lu9VL84ZZ3NpIL0eSWNiHGE0YqGi1x9QKTz0pjmhM34wCNlvOzK1u91AECJDY8LEBKHZXQpSS1NQ9tbWcE");'></div>
+<div class="flex flex-col items-start">
+<span class="font-bold text-[var(--text-primary)]">AI Tutor</span>
+<p class="chat-bubble tutor-bubble">
+                                    ¡Buena elección! Cubriremos los conceptos fundamentales, algoritmos y aplicaciones del aprendizaje automático. No dudes en hacer preguntas a medida que avanzamos.
+                                  </p>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-[var(--border-color)] bg-[var(--background-light)]">
+<div id="topicActions" class="flex gap-4 mb-4"></div>
+<div class="relative flex items-center">
+<input class="w-full rounded-lg border-[var(--border-color)] bg-gray-700 text-[var(--text-primary)] placeholder-gray-500 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] pl-4 pr-24 py-3" placeholder="Type your message here..." type="text"/>
+<div class="absolute right-3 flex items-center gap-2">
+<button class="icon-button">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<button class="send-button">
+                                    Send
+                                    <svg class="w-5 h-5 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="w-96 flex-shrink-0 border-l border-[var(--border-color)] bg-[var(--background-dark)] p-6 flex flex-col h-screen">
+<div class="flex-1 overflow-y-auto" style="max-height: calc(100vh - 200px);">
+<div class="space-y-6">
+<div>
+<h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">Chat Language</h2>
+<select id="language" name="language" class="w-full rounded-lg border-[var(--border-color)] bg-gray-700 text-[var(--text-primary)] focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] p-3">
+<option value="English" >English</option>
+<option value="Spanish" selected>Spanish</option>
+<option value="French">French</option>
+<option value="German">German</option>
+<option value="Chinese">Chinese</option>
+<option value="Portuguese">Portuguese</option>
+</select>
+</div>
+<div>
+<h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">Teacher Name</h2>
+<select id="teacher" name="teacher" class="w-full rounded-lg border-[var(--border-color)] bg-gray-700 text-[var(--text-primary)] focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] p-3">
+<option value="Alan Turing">Alan Turing</option>
+<option value="Mahatma Gandhi">Mahatma Gandhi</option>
+<option value="Jaime Escalante">Jaime Escalante</option>
+<option value="Peter Linch">Peter Linch</option>
+<option value="Benjamin Graham">Benjamin Graham</option>
+<option value="Warren Buffett">Warren Buffett</option>
+<option value="Marina Rojas Estape">Marina Rojas Estape</option>
+<option value="Marios Alonso Puig">Marios Alonso Puig</option>
+</select>
+</div>
+<div>
+<h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">Topic Selection</h2>
+<select id="topic" name="topic" class="w-full rounded-lg border-[var(--border-color)] bg-gray-700 text-[var(--text-primary)] focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] p-3">
+<option value="Introduction to Machine Learning">Introduction to Machine Learning</option>
+<option value="Supervised Learning">Supervised Learning</option>
+<option value="Unsupervised Learning">Unsupervised Learning</option>
+<option value="Neural Networks & Deep Learning">Neural Networks & Deep Learning</option>
+<option value="Experto en Leyes">Experto en Leyes(Abogado de Bolivia) </option>
+<option value="Como invertir en la bolsa de valores">Como invertir en la bolsa de valores</option>
+<option value="Operaciones Combinadas (Math)">Operaciones Combinadas</option>
+<option value="Excel Avanzado">Excel Avanzado</option>
+<option value="Como encontrar mi persona vitamina (El Libro)">Como encontrar mi persona vitamina</option>
+<option value="Como meditar 5 min.">Como meditar 5 min</option>
+<option value="El camino de Santiago">El camino de Santiago</option>
+</select>
+</div>
+<div>
+<h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">📚 Knowledge Files</h2>
+<div id="knowledgeSection" class="bg-[var(--background-light)] p-3 rounded-lg mb-4 max-h-48 overflow-y-auto">
+    <div class="flex items-center gap-2 mb-2">
+        <div id="knowledgeStatus" class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-gray-500 rounded-full" id="knowledgeIndicator"></div>
+            <span id="knowledgeStatusText" class="text-xs text-[var(--text-secondary)]">Cargando...</span>
+        </div>
+    </div>
+    
+    <div id="currentTopicFiles" class="space-y-1">
+        <!-- Los archivos del tema actual se mostrarán aquí -->
+    </div>
+    
+    <div id="usedInLastResponse" class="mt-3 pt-2 border-t border-[var(--border-color)]" style="display: none;">
+        <h4 class="text-xs font-semibold text-[var(--accent-color)] mb-1">📖 Usado en última respuesta:</h4>
+        <div id="usedFilesList" class="space-y-1">
+            <!-- Archivos usados en la última respuesta -->
+        </div>
+    </div>
+    
+    <div class="mt-2 pt-2 border-t border-[var(--border-color)]">
+        <button id="refreshKnowledge" class="text-xs text-[var(--primary-color)] hover:text-[var(--accent-color)] transition-colors">
+            🔄 Actualizar
+        </button>
+        <button id="debugFiles" class="ml-3 text-xs text-yellow-500 hover:text-yellow-400 transition-colors">
+            🐛 Debug Files
+        </button>
+        <a href="/upload" class="ml-3 text-xs text-[var(--primary-color)] hover:text-[var(--accent-color)] transition-colors">
+            ➕ Subir archivos
+        </a>
+    </div>
+</div></div>
+<h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">Answer Evaluation</h2>
+
+<!-- Checkbox para habilitar evaluación -->
+<div class="mb-3 p-2 bg-[var(--background-dark)] rounded-lg border border-[var(--border-color)]">
+    <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" id="enableEvaluation" class="w-4 h-4 text-[var(--primary-color)] bg-gray-700 border-gray-600 rounded focus:ring-[var(--primary-color)] focus:ring-2">
+        <div class="flex flex-col">
+            <span class="text-sm font-medium text-[var(--text-primary)]">Evaluar respuestas con Azure AI</span>
+            <span class="text-xs text-[var(--text-secondary)]">Usa evaluadores NLP cuantitativos de Azure OpenAI</span>
+        </div>
+    </label>
+</div>
+
+<div class="bg-[var(--background-light)] p-3 rounded-lg max-h-64 overflow-y-auto" id="evaluationResults">
+<!-- Contenido por defecto cuando no está habilitada la evaluación -->
+<div id="evaluationDisabled" class="text-center py-4">
+    <div class="text-[var(--text-secondary)] text-sm mb-2">
+        <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Evaluación deshabilitada
+    </div>
+    <p class="text-xs text-[var(--text-secondary)]">Marca el checkbox arriba para evaluar respuestas con Azure AI</p>
+</div>
+
+<!-- Contenido dinámico cuando está habilitada -->
+<div id="evaluationEnabled" style="display: none;">
+    <div class="flex justify-between items-center mb-1">
+        <span class="text-sm font-medium text-[var(--text-primary)]">Reliability</span>
+        <span id="reliabilityScore" class="text-lg font-bold text-[var(--accent-color)]">--</span>
+    </div>
+    <div class="groundedness-bar-bg">
+        <div id="reliabilityBar" class="groundedness-bar" style="width: 0%;"></div>
+    </div>
+
+    <!-- Detalles colapsables -->
+    <details class="mt-3">
+        <summary class="text-sm text-[var(--primary-color)] cursor-pointer hover:text-[var(--accent-color)]">Ver detalles de evaluación</summary>
+        <div class="mt-2 space-y-2">
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-[var(--text-primary)]">Coherence</span>
+                <span id="coherenceScore" class="text-xs font-bold text-[var(--accent-color)]">--</span>
+            </div>
+            <div class="groundedness-bar-bg h-1"><div id="coherenceBar" class="groundedness-bar h-1" style="width: 0%;"></div></div>
+            
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-[var(--text-primary)]">Fluency</span>
+                <span id="fluencyScore" class="text-xs font-bold text-[var(--accent-color)]">--</span>
+            </div>
+            <div class="groundedness-bar-bg h-1"><div id="fluencyBar" class="groundedness-bar h-1" style="width: 0%;"></div></div>
+            
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-[var(--text-primary)]">Groundedness</span>
+                <span id="groundednessScore" class="text-xs font-bold text-[var(--accent-color)]">--</span>
+            </div>
+            <div class="groundedness-bar-bg h-1"><div id="groundednessBar" class="groundedness-bar h-1" style="width: 0%;"></div></div>
+            
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-[var(--text-primary)]">Relevance</span>
+                <span id="relevanceScore" class="text-xs font-bold text-[var(--accent-color)]">--</span>
+            </div>
+            <div class="groundedness-bar-bg h-1"><div id="relevanceBar" class="groundedness-bar h-1" style="width: 0%;"></div></div>
+            
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-[var(--text-primary)]">Retrieval</span>
+                <span id="retrievalScore" class="text-xs font-bold text-[var(--accent-color)]">--</span>
+            </div>
+            <div class="groundedness-bar-bg h-1"><div id="retrievalBar" class="groundedness-bar h-1" style="width: 0%;"></div></div>
+        </div>
+    </details>
+    
+    <p class="text-xs text-[var(--text-secondary)] mt-2">Shows alignment with verified material.</p>
+</div>
+</div>
+</div>
+
+<div class="flex-shrink-0 mt-4 border-t border-[var(--border-color)] pt-4" style="min-height: 180px;">
+<h3 class="text-lg font-bold text-[var(--text-primary)] mb-3">Session Tools</h3>
+
+<div class="space-y-2">
+<!-- Session Tools -->
+
+<button class="w-full text-left p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center gap-3 text-[var(--text-primary)]" id="clearChatBtn">
+<svg class="w-5 h-5 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 4v5h5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M20 20v-5h-5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M4 12a8 8 0 018-8h0a8 8 0 018 8v0a8 8 0 01-8 8h0a8 8 0 01-8-8v0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span> Borrar chat</span>
+</button>
+<button class="w-full text-left p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center gap-3 text-[var(--text-primary)]">
+<svg class="w-5 h-5 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span id="saveTranscriptBtn">Save Transcript</span>
+</button>
+<button class="w-full text-left p-3 rounded-lg hover:bg-red-900/50 text-red-400 transition-colors duration-200 flex items-center gap-3">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>End Session</span>
+</button>
+</div>
+</div>
+</aside>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+// Generar resumen y audio MP3
+document.addEventListener('DOMContentLoaded', function() {
+    const resumenBtn = document.getElementById('btnResumen');
+    if (resumenBtn) {
+        resumenBtn.addEventListener('click', async function() {
+            // 1. Generar transcript del chat
+            let chatArea = document.querySelector('.flex-1.overflow-y-auto');
+            let transcript = '';
+            if (chatArea) {
+                chatArea.querySelectorAll('.flex.items-start.gap-4.mb-4').forEach(msgBlock => {
+                    let name = msgBlock.querySelector('.font-bold');
+                    let text = msgBlock.querySelector('.chat-bubble');
+                    if (name && text) {
+                        transcript += `${name.textContent}:\n`;
+                        transcript += text.textContent.trim() + '\n\n';
+                    }
+                });
+            }
+             
+            // Mostrar resumen
+            let resumenDiv = document.createElement('div');
+            resumenDiv.style.background = '#232a34';
+            resumenDiv.style.color = '#ffd600';
+            resumenDiv.style.padding = '16px';
+            resumenDiv.style.margin = '16px 0';
+            resumenDiv.style.borderRadius = '12px';
+            resumenDiv.textContent = 'Resumen: ' + resumen;
+            document.body.appendChild(resumenDiv);
+            // 3. Generar audio y descargar como MP3 usando Web Audio API + lamejs
+            try {
+                // Usar SpeechSynthesis para reproducir
+                let utter = new SpeechSynthesisUtterance(resumen);
+                utter.lang = 'es-ES';
+                window.speechSynthesis.speak(utter);
+                // Usar Web Audio API para grabar y lamejs para MP3
+                if (!window.lamejsLoaded) {
+                    let script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js';
+                    document.head.appendChild(script);
+                    await new Promise(res => script.onload = res);
+                    window.lamejsLoaded = true;
+                }
+                let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                let dest = audioCtx.createMediaStreamDestination();
+                let recorder = new MediaRecorder(dest.stream);
+                let chunks = [];
+                recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = async function() {
+                    let blob = new Blob(chunks, { type: 'audio/wav' });
+                    let arrayBuffer = await blob.arrayBuffer();
+                    let audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                    let samples = audioBuffer.getChannelData(0);
+                    let mp3enc = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128);
+                    let mp3Data = [];
+                    let sampleBlockSize = 1152;
+                    for (let i = 0; i < samples.length; i += sampleBlockSize) {
+                        let sampleChunk = samples.subarray(i, i + sampleBlockSize);
+                        let mp3buf = mp3enc.encodeBuffer(sampleChunk);
+                        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+                    }
+                    let mp3buf = mp3enc.flush();
+                    if (mp3buf.length > 0) mp3Data.push(mp3buf);
+                    let mp3Blob = new Blob(mp3Data, { type: 'audio/mp3' });
+                    let url = URL.createObjectURL(mp3Blob);
+                    let a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'resumen_chat.mp3';
+                    a.textContent = 'Descargar resumen en MP3';
+                    a.style.display = 'block';
+                    a.style.margin = '12px 0';
+                    a.style.color = '#ffd600';
+                    document.body.appendChild(a);
+                    setTimeout(() => {
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                    }, 20000);
+                };
+                recorder.start();
+                let utter2 = new SpeechSynthesisUtterance(resumen);
+                utter2.lang = 'es-ES';
+                window.speechSynthesis.speak(utter2);
+                utter2.onend = function() {
+                    recorder.stop();
+                };
+            } catch (err) {
+                // Si no es posible grabar, solo reproducir
+            }
+        });
+    }
+});
+// Exportar todo el chat al hacer clic en 'Save Transcript'
+document.addEventListener('DOMContentLoaded', function() {
+    const saveBtn = document.getElementById('saveTranscriptBtn');
+    if (saveBtn) {
+        saveBtn.parentElement.addEventListener('click', function() {
+            let chatArea = document.querySelector('.flex-1.overflow-y-auto');
+            let transcript = '';
+            if (chatArea) {
+                chatArea.querySelectorAll('.flex.items-start.gap-4.mb-4').forEach(msgBlock => {
+                    let name = msgBlock.querySelector('.font-bold');
+                    let text = msgBlock.querySelector('.chat-bubble');
+                    if (name && text) {
+                        transcript += `${name.textContent}:\n`;
+                        transcript += text.textContent.trim() + '\n\n';
+                    }
+                });
+            }
+            let blob = new Blob([transcript], { type: 'text/plain' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'chat_transcript.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+});
+// Botones dinámicos para acciones de Topic
+document.addEventListener('DOMContentLoaded', function() {
+    const topicSelect = document.getElementById('topic');
+    const topicActions = document.getElementById('topicActions');
+    function renderTopicButtons() {
+        const topic = topicSelect ? topicSelect.value : '';
+        topicActions.innerHTML = `
+            <button class="send-button" id="btnEstudio">Iniciar Estudio de \"${topic}\"</button>
+            <button class="send-button" id="btnPractico">Tomar práctico de \"${topic}\"</button>
+            <button class="send-button" id="btnAudio">Crear una guía de estudio de: \"${topic}\"</button>
+        `;
+        function disableButtons(disabled=true) {
+            document.getElementById('btnEstudio').disabled = disabled;
+            document.getElementById('btnPractico').disabled = disabled;
+            document.getElementById('btnAudio').disabled = disabled;
+        }
+        document.getElementById('btnEstudio').onclick = function() {
+            disableButtons(true);
+            sendMessage(this.textContent);
+            setTimeout(() => disableButtons(false), 2000);
+        };
+        document.getElementById('btnPractico').onclick = function() {
+            disableButtons(true);
+            sendMessage(this.textContent);
+            setTimeout(() => disableButtons(false), 2000);
+        };
+        document.getElementById('btnAudio').onclick = function() {
+            disableButtons(true);
+            // Mejor audio: reproducir, mostrar progreso y permitir descargar como WAV
+            const introText = `Introducción a ${topic}`;
+            let utter = new SpeechSynthesisUtterance(introText);
+            utter.lang = 'es-ES';
+            utter.onstart = function() {
+                let status = document.createElement('div');
+                status.id = 'audioStatus';
+                status.style.color = '#ffd600';
+                status.style.fontWeight = 'bold';
+                status.style.margin = '12px 0';
+                status.textContent = '🔊 Reproduciendo audio...';
+                document.body.appendChild(status);
+            };
+            utter.onend = function() {
+                let status = document.getElementById('audioStatus');
+                if (status) status.textContent = '✅ Audio finalizado.';
+                setTimeout(() => {
+                    if (status) status.remove();
+                }, 2000);
+            };
+            window.speechSynthesis.speak(utter);
+            // Descargar como WAV usando Web Audio API
+            try {
+                let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                let utter2 = new SpeechSynthesisUtterance(introText);
+                utter2.lang = 'es-ES';
+                let dest = audioCtx.createMediaStreamDestination();
+                let synth = window.speechSynthesis;
+                let recorder = new MediaRecorder(dest.stream);
+                let chunks = [];
+                recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = e => {
+                    let blob = new Blob(chunks, { type: 'audio/wav' });
+                    let url = URL.createObjectURL(blob);
+                    let a = document.createElement('a');
+                    a.href = url;
+                    a.download = `intro_${topic.replace(/\s+/g,'_')}.wav`;
+                    a.textContent = 'Descargar audio';
+                    a.style.display = 'block';
+                    a.style.margin = '12px 0';
+                    a.style.color = '#ffd600';
+                    document.body.appendChild(a);
+                    setTimeout(() => {
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                    }, 10000);
+                };
+                recorder.start();
+                synth.speak(utter2);
+                utter2.onend = function() {
+                    recorder.stop();
+                };
+            } catch (err) {
+                // Si no es posible grabar, solo reproducir
+            }
+            sendMessage(this.textContent);
+            setTimeout(() => disableButtons(false), 2000);
+        };
+    }
+    if(topicSelect) {
+        topicSelect.addEventListener('change', renderTopicButtons);
+        renderTopicButtons();
+    }
+});
+document.getElementById('canvasMonitor').style.display = 'none';
+document.querySelector('.flex-1.overflow-y-auto').style.display = 'block';
+// --- Chat logic ---
+let agentMode = false;
+let canvasMode = false;
+function updateStatusBar(msg) {
+    // Puedes implementar una barra de estado si lo deseas
+    console.log(msg);
+}
+document.addEventListener('DOMContentLoaded', function() {
+    // Botón de enviar
+    // Solo agregar el evento al botón de enviar del input principal, no a los botones dinámicos
+    const inputSendBtn = document.querySelector('.relative .send-button');
+    const input = document.querySelector('input[type="text"]');
+    if (inputSendBtn) {
+        inputSendBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            sendMessage(input.value);
+        });
+    }
+    if (input) {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
+    
+    // Manejar checkbox de evaluación
+    const enableEvaluationCheckbox = document.getElementById('enableEvaluation');
+    const evaluationDisabled = document.getElementById('evaluationDisabled');
+    const evaluationEnabled = document.getElementById('evaluationEnabled');
+    
+    if (enableEvaluationCheckbox) {
+        enableEvaluationCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                evaluationDisabled.style.display = 'none';
+                evaluationEnabled.style.display = 'block';
+            } else {
+                evaluationDisabled.style.display = 'block';
+                evaluationEnabled.style.display = 'none';
+                // Limpiar valores cuando se deshabilita
+                resetEvaluationScores();
+            }
+        });
+    }
+});
+
+function resetEvaluationScores() {
+    const scoreElements = ['reliabilityScore', 'coherenceScore', 'fluencyScore', 'groundednessScore', 'relevanceScore', 'retrievalScore'];
+    const barElements = ['reliabilityBar', 'coherenceBar', 'fluencyBar', 'groundednessBar', 'relevanceBar', 'retrievalBar'];
+    
+    scoreElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = '--';
+    });
+    
+    barElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.width = '0%';
+    });
+}
+
+function updateEvaluationScores(evalResults) {
+    console.log('📊 Actualizando puntuaciones de evaluación:', evalResults);
+    
+    const enableEvaluationCheckbox = document.getElementById('enableEvaluation');
+    if (!enableEvaluationCheckbox || !enableEvaluationCheckbox.checked) {
+        return; // No actualizar si la evaluación no está habilitada
+    }
+    
+    // Calcular confiabilidad promedio
+    const scores = [
+        evalResults.coherence || 0,
+        evalResults.fluency || 0,
+        evalResults.groundedness || 0,
+        evalResults.relevance || 0,
+        evalResults.retrieval || 0
+    ];
+    const reliability = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    
+    // Actualizar puntuación principal de confiabilidad
+    const reliabilityScore = document.getElementById('reliabilityScore');
+    const reliabilityBar = document.getElementById('reliabilityBar');
+    if (reliabilityScore && reliabilityBar) {
+        reliabilityScore.textContent = reliability;
+        reliabilityBar.style.width = `${reliability}%`;
+    }
+    
+    // Actualizar puntuaciones detalladas
+    const scoreUpdates = [
+        ['coherenceScore', 'coherenceBar', evalResults.coherence],
+        ['fluencyScore', 'fluencyBar', evalResults.fluency],
+        ['groundednessScore', 'groundednessBar', evalResults.groundedness],
+        ['relevanceScore', 'relevanceBar', evalResults.relevance],
+        ['retrievalScore', 'retrievalBar', evalResults.retrieval]
+    ];
+    
+    scoreUpdates.forEach(([scoreId, barId, score]) => {
+        const scoreElement = document.getElementById(scoreId);
+        const barElement = document.getElementById(barId);
+        
+        if (scoreElement && barElement && score !== undefined) {
+            scoreElement.textContent = score;
+            barElement.style.width = `${score}%`;
+        }
+    });
+    
+    console.log('✅ Puntuaciones actualizadas correctamente');
+}
+
+function makeSourcesClickable(content, hasRealSources = true) {
+    // Solo convertir fuentes en enlaces descargables si realmente hay fuentes de documentos
+    if (!hasRealSources) {
+        // Si no hay fuentes reales, remover referencias falsas a archivos
+        return content
+            .replace(/\(Fuente:\s*📄\s*[^)]+\)/g, '') // Fuente con emoji ya presente
+            .replace(/\(Fuente:\s*\[([^\]]+\.(pdf|docx|txt|doc|pptx|xlsx))\]\)/g, '') // Fuente con corchetes
+            .replace(/\[([^\]]+\.(pdf|docx|txt|doc|pptx|xlsx))\]/g, '') // Referencias directas a archivos
+            .replace(/📄\s*([^\s]+\.(pdf|docx|txt|doc|pptx|xlsx))/g, ''); // Emoji seguido de archivo
+    }
+    
+    // Convertir fuentes como (Fuente: [filename.ext]) en enlaces descargables
+    return content.replace(/\(Fuente:\s*\[([^\]]+)\]\)/g, function(match, filename) {
+        return `(Fuente: <a href="/download/${filename}" class="source-link" download="${filename}" style="color: #4a90e2; text-decoration: underline; cursor: pointer;" title="Descargar ${filename}">📄 ${filename}</a>)`;
+    }).replace(/\[([^\]]+\.(pdf|docx|txt|doc|pptx|xlsx))\]/g, function(match, filename) {
+        // También convertir referencias directas como [filename.ext]
+        return `<a href="/download/${filename}" class="source-link" download="${filename}" style="color: #4a90e2; text-decoration: underline; cursor: pointer;" title="Descargar ${filename}">📄 ${filename}</a>`;
+    });
+}
+
+async function sendMessage(msgText) {
+    let userMsg = msgText;
+    if (typeof userMsg !== 'string') {
+        const input = document.querySelector('input[type="text"]');
+        userMsg = input.value;
+        input.value = '';
+    }
+    // Obtener el idioma y el tema seleccionados
+    const languageSelect = document.getElementById('language');
+    const language = languageSelect ? languageSelect.value : 'Spanish';
+    const topicSelect = document.getElementById('topic');
+    const topic = topicSelect ? topicSelect.value : '';
+    const teacherSelect = document.getElementById('teacher');
+    const teacher = teacherSelect ? teacherSelect.value : 'teacher';
+    const enableEvaluationCheckbox = document.getElementById('enableEvaluation');
+    const enableEvaluation = enableEvaluationCheckbox ? enableEvaluationCheckbox.checked : false;
+    // Construir el prompt combinando mensaje y tema
+    let promptMsg = userMsg;
+    if (topic) {
+        // Construir instrucciones en el idioma seleccionado
+        const instructions = {
+            'English': `You are an expert teacher in "${topic}". Act as the teacher, using the topic only as context, but respond directly to the user's question.\nUser's question: ${userMsg}`,
+            'Spanish': `Eres un profesor experto en "${topic}". Responde como el profesor, usando el tema solo como contexto, pero responde directamente a la pregunta del usuario.\nPregunta del usuario: ${userMsg}`,
+            'French': `Vous êtes un professeur expert en "${topic}". Répondez comme le professeur, en utilisant le sujet uniquement comme contexte, mais répondez directement à la question de l'utilisateur.\nQuestion de l'utilisateur: ${userMsg}`,
+            'German': `Sie sind ein Experte für "${topic}". Antworten Sie als Lehrer, verwenden Sie das Thema nur als Kontext, aber antworten Sie direkt auf die Frage des Benutzers.\nFrage des Benutzers: ${userMsg}`,
+            'Chinese': `您是"${topic}"方面的专家教师。作为教师回答，仅将主题作为背景，但直接回答用户的问题。\n用户问题：${userMsg}`,
+            'Portuguese': `Você é um professor especialista em "${topic}". Responda como o professor, usando o tópico apenas como contexto, mas responda diretamente à pergunta do usuário.\nPergunta do usuário: ${userMsg}`
+        };
+        promptMsg = instructions[language] || instructions['English'];
+    }
+    if (!canvasMode) {
+        appendMessage(userMsg, "user-bubble");
+    } else {
+        // Mostrar el mensaje del usuario en el monitor
+        const monitor = document.getElementById('canvasMonitor');
+        monitor.innerHTML = `<div style='color:#b3e5fc;font-weight:600;'>You:</div><div style='margin-bottom:12px;'>${userMsg}</div>`;
+    }
+    // Timer UI
+    const timerDiv = document.getElementById('response-timer');
+    let start = Date.now();
+    let timerInterval;
+    timerDiv.innerHTML = '<span class="spinner"></span>Esperando respuesta...';
+    timerDiv.style.display = 'block';
+    timerInterval = setInterval(() => {
+        let elapsed = ((Date.now() - start) / 1000).toFixed(1);
+        timerDiv.innerHTML = `<span class="spinner"></span>Esperando respuesta... (${elapsed}s)`;
+    }, 100);
+    try {
+        const formData = new FormData();
+        formData.append('message', promptMsg);
+        formData.append('agent_mode', agentMode ? 'on' : 'off');
+        formData.append('language', language);
+        formData.append('topic', topic);
+        formData.append('teacher', teacher);
+        formData.append('enable_evaluation', enableEvaluation ? 'true' : 'false');
+
+        // Reintentar la solicitud si falla (excepto para errores 400 que son filtrado de contenido)
+        const fetchWithRetry = async (url, options, maxRetries = 3) => {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    // Si es error 400, no reintentar - es contenido filtrado
+                    if (response.status === 400) {
+                        return response; // Retornar la respuesta para manejar el filtrado
+                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return response;
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                }
+            }
+        };
+        // Enviar historial del chat como JSON
+        let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+        formData.append('history', JSON.stringify(chatHistory));
+        const response = await fetchWithRetry('/chat', {
+            method: 'POST',
+            body: formData
+        });
+        
+        // Verificar si hay un error específico del servidor
+        if (!response.ok) {
+            if (response.status === 400) {
+                // Contenido filtrado
+                try {
+                    const errorData = await response.json();
+                    appendMessage(`🛡️ ${errorData.message || 'Contenido no permitido. Por favor, hazme una pregunta educativa.'}`, "filtered-bubble");
+                } catch {
+                    appendMessage("🛡️ Contenido no permitido. Por favor, hazme una pregunta educativa sobre temas como matemáticas, ciencias, programación, historia, literatura, economía, etc.", "filtered-bubble");
+                }
+                timerDiv.innerHTML = '🛡️ Contenido filtrado';
+                setTimeout(() => { timerDiv.style.display = 'none'; }, 3500);
+                clearInterval(timerInterval);
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let responseContent = "";
+        let placeholderMsg = null;
+        let razonamientoThink = null;
+        if (!canvasMode) {
+            // Crear mensaje placeholder en el chat
+            const chatArea = document.querySelector('.flex-1.overflow-y-auto');
+            placeholderMsg = document.createElement('div');
+            placeholderMsg.className = 'flex items-start gap-4 mb-4';
+            let avatar = document.createElement('div');
+            avatar.className = 'w-10 h-10 rounded-full bg-cover bg-center shrink-0';
+            avatar.style.backgroundImage = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuApme4QoQtozt4j9VZTEaiVJjlQYSJ7pTbQjl2Ab8bWeJ-Rfem4Eg4Ea271jU2xx55lNrQGzcd0liGNA9nwTpmt4Gl4-_sOAu_4pvykcaUS89ohZSAmCaRRT4_uTbATEx-V82UlIHedbpc2JBKUElabFJxMYripRyL_u0-vYoPStya4ae3wWZvQPFzF8lu9VL84ZZ3NpIL0eSWNiHGE0YqGi1x9QKTz0pjmhM34wCNlvOzK1u91AECJDY8LEBKHZXQpSS1NQ9tbWcE')";
+            let bubble = document.createElement('div');
+            bubble.className = 'flex flex-col';
+            let name = document.createElement('span');
+            name.className = 'font-bold text-[var(--text-primary)] mb-1';
+            let teacherSelect = document.getElementById('teacher');
+            let teacherName = teacherSelect ? teacherSelect.value : '';
+            name.textContent = `AI Tutor${teacherName ? ' (' + teacherName + ')' : ''}`;
+            bubble.classList.add('items-start');
+            bubble.appendChild(name);
+            let msg = document.createElement('div');
+            msg.className = 'chat-bubble tutor-bubble';
+            msg.innerHTML = '<span class="spinner"></span>Pensando...';
+            bubble.appendChild(msg);
+            placeholderMsg.appendChild(avatar);
+            placeholderMsg.appendChild(bubble);
+            chatArea.appendChild(placeholderMsg);
+            
+            // Auto-scroll inicial al agregar el mensaje placeholder
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
+            responseContent += buffer;
+            
+            // Procesar información de archivos usados
+            const usedFilesMatch = buffer.match(/\[USED_FILES:(.+?)\]/s);
+            if (usedFilesMatch) {
+                try {
+                    // Limpiar y validar JSON antes de parsear
+                    let jsonStr = usedFilesMatch[1].trim();
+                    // Corregir JSON malformado común
+                    jsonStr = jsonStr.replace(/,(\s*[\]}])/g, '$1'); // Remover comas finales
+                    jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, ''); // Remover caracteres de control
+                    
+                    const filesData = JSON.parse(jsonStr);
+                    updateKnowledgeFiles(filesData);
+                    // Remover la información de archivos del buffer
+                    buffer = buffer.replace(usedFilesMatch[0], '');
+                    responseContent = responseContent.replace(usedFilesMatch[0], '');
+                } catch (e) {
+                    console.warn('Error procesando archivos usados (continuando):', e.message);
+                    // Remover el match problemático para evitar que se acumule
+                    buffer = buffer.replace(usedFilesMatch[0], '');
+                    responseContent = responseContent.replace(usedFilesMatch[0], '');
+                }
+            }
+            
+            // Procesar información de fuentes para mostrar al final
+            const sourcesMatch = buffer.match(/\[SOURCES:(.+?)\]/s);
+            if (sourcesMatch) {
+                try {
+                    // Limpiar y validar JSON antes de parsear
+                    let jsonStr = sourcesMatch[1].trim();
+                    // Corregir JSON malformado común
+                    jsonStr = jsonStr.replace(/,(\s*[\]}])/g, '$1'); // Remover comas finales
+                    jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, ''); // Remover caracteres de control
+                    
+                    window.lastResponseSources = JSON.parse(jsonStr);
+                    // Remover la información de fuentes del buffer
+                    buffer = buffer.replace(sourcesMatch[0], '');
+                    responseContent = responseContent.replace(sourcesMatch[0], '');
+                } catch (e) {
+                    console.warn('Error procesando fuentes (continuando):', e.message);
+                    // Remover el match problemático para evitar que se acumule
+                    buffer = buffer.replace(sourcesMatch[0], '');
+                    responseContent = responseContent.replace(sourcesMatch[0], '');
+                }
+            }
+            
+            // Procesar resultados de evaluación
+            const evalMatch = buffer.match(/\[EVAL:(.+?)\]/s);
+            if (evalMatch) {
+                try {
+                    let jsonStr = evalMatch[1].trim();
+                    jsonStr = jsonStr.replace(/,(\s*[\]}])/g, '$1');
+                    jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, '');
+                    
+                    const evalResults = JSON.parse(jsonStr);
+                    updateEvaluationScores(evalResults);
+                    // Remover la información de evaluación del buffer
+                    buffer = buffer.replace(evalMatch[0], '');
+                    responseContent = responseContent.replace(evalMatch[0], '');
+                } catch (e) {
+                    console.warn('Error procesando evaluación (continuando):', e.message);
+                    buffer = buffer.replace(evalMatch[0], '');
+                    responseContent = responseContent.replace(evalMatch[0], '');
+                }
+            }
+            // Actualizar el mensaje en el chat conforme llega cada chunk
+            if (!canvasMode && placeholderMsg) {
+                let msgDiv = placeholderMsg.querySelector('.chat-bubble');
+                if (msgDiv) {
+                    // Detectar y guardar <think>...
+                    let thinkMatch = buffer.match(/<think>([\s\S]*?)<\/think>/);
+                    let hasThink = responseContent.match(/<think>[\s\S]*?<\/think>/);
+                    if (thinkMatch) {
+                        razonamientoThink = thinkMatch[1].trim();
+                    }
+                    
+                    // 🔍 Detectar si la respuesta incluye conocimiento de documentos
+                    let hasKnowledge = responseContent.includes('[CONOCIMIENTO DE DOCUMENTOS SUBIDOS]') || 
+                                     responseContent.includes('Según el documento') ||
+                                     responseContent.includes('basándome en el documento') ||
+                                     responseContent.includes('De acuerdo con el material subido');
+                    
+                    // Agregar indicador de conocimiento si se detecta
+                    if (hasKnowledge && !msgDiv.querySelector('.knowledge-indicator')) {
+                        let knowledgeDiv = document.createElement('div');
+                        knowledgeDiv.className = 'knowledge-indicator';
+                        knowledgeDiv.style.background = '#1e3a5f';
+                        knowledgeDiv.style.border = '1px solid #4a90e2';
+                        knowledgeDiv.style.borderRadius = '8px';
+                        knowledgeDiv.style.padding = '8px 12px';
+                        knowledgeDiv.style.marginBottom = '12px';
+                        knowledgeDiv.style.fontSize = '0.875rem';
+                        knowledgeDiv.innerHTML = '📚 <strong>Usando conocimiento de documentos subidos</strong>';
+                        knowledgeDiv.style.color = '#87ceeb';
+                        msgDiv.insertBefore(knowledgeDiv, msgDiv.firstChild);
+                    }
+                    // Si hay <think> en el stream, mostrar solo 'Pensando...'
+                    if (hasThink) {
+                        msgDiv.innerHTML = '<span class="spinner"></span>Pensando...';
+                    } else {
+                        // Si hay cualquier apertura <think> (aunque esté incompleta), mostrar solo 'Pensando...'
+                        if (responseContent.includes('<think>') && !responseContent.includes('</think>')) {
+                            msgDiv.innerHTML = '<span class="spinner"></span>Pensando...';
+                        } else {
+                            // Excluir cualquier contenido de <think> (incluso incompleto) y bloques [SCORE:...], [EVAL:...], [USED_FILES:...] y [SOURCES:...] del streaming
+                            let mainContent = responseContent
+                                .replace(/<think>[\s\S]*?<\/think>/g, '')
+                                .replace(/<think>[\s\S]*/g, '')
+                                .replace(/\[SCORE:[^\]]*\]/g, '')
+                                .replace(/\[EVAL:[^\]]*\]/g, '')
+                                .replace(/\[USED_FILES:[^\]]*\]/g, '')
+                                .replace(/\[SOURCES:[^\]]*\]/g, '')
+                                // Filtros mejorados para limpiar información cruda
+                                .replace(/,?\s*"avg_relevance":\s*[0-9.]+/g, '')
+                                .replace(/,?\s*"max_relevance":\s*[0-9.]+/g, '')
+                                .replace(/\}\]\]\]/g, '')
+                                .replace(/^\s*,\s*/, '')  // Remover coma inicial
+                                .replace(/^[,\s\]{}]+/, ''); // Remover caracteres residuales al inicio
+                            
+                            // Verificar si hay fuentes reales antes de procesar
+                            let hasRealSources = window.lastResponseSources && window.lastResponseSources.length > 0;
+                            msgDiv.innerHTML = makeSourcesClickable(marked.parse(mainContent), hasRealSources);
+                            
+                            // Auto-scroll al final del chat conforme llega el contenido
+                            const chatArea = document.querySelector('.flex-1.overflow-y-auto');
+                            if (chatArea) {
+                                chatArea.scrollTop = chatArea.scrollHeight;
+                            }
+                        }
+                    }
+                }
+            }
+            buffer = "";
+        }
+        let elapsed = ((Date.now() - start) / 1000).toFixed(1);
+        timerDiv.innerHTML = `✅ Respondió en ${elapsed}s`;
+        setTimeout(() => { timerDiv.style.display = 'none'; }, 3500);
+        clearInterval(timerInterval);
+        
+        if (!canvasMode && placeholderMsg) {
+            // Mostrar razonamiento colapsado antes de la respuesta, solo para consultas del usuario
+            let msgDiv = placeholderMsg.querySelector('.chat-bubble');
+            if (msgDiv) {
+                let mainContent = responseContent
+                    .replace(/<think>[\s\S]*?<\/think>/g, '')
+                    .replace(/\[SCORE:[^\]]*\]/g, '')
+                    .replace(/\[EVAL:[^\]]*\]/g, '')
+                    .replace(/\[USED_FILES:[^\]]*\]/g, '')
+                    .replace(/\[SOURCES:[^\]]*\]/g, '')
+                    // Filtros mejorados para limpiar información cruda de archivos
+                    .replace(/,?\s*"avg_relevance":\s*[0-9.]+/g, '')
+                    .replace(/,?\s*"max_relevance":\s*[0-9.]+/g, '')
+                    .replace(/\}\]\]\]/g, '')
+                    .replace(/^\s*,\s*/, '')  // Remover coma inicial
+                    .replace(/^[,\s\]{}]+/, ''); // Remover caracteres residuales al inicio
+                
+                // Verificar si la respuesta realmente utiliza archivos de la base de conocimientos
+                let hasRealSources = window.lastResponseSources && window.lastResponseSources.length > 0;
+                let html = makeSourcesClickable(marked.parse(mainContent), hasRealSources);
+                
+                // 📖 INDICADOR DE TIPO DE RESPUESTA
+                let responseTypeIndicator = '';
+             
+                
+                let razonamientoHtml = '';
+                if (razonamientoThink && mainContent.trim().length > 0) {
+                    let razonamientoFiltrado = razonamientoThink
+                        .replace(/\[SCORE:[^\]]*\]/g, '')
+                        .replace(/\[EVAL:[^\]]*\]/g, '');
+                    razonamientoHtml = `<details style='background:#333;border-radius:12px;padding:0;margin-bottom:12px;' closed><summary style='color:#ffd600;cursor:pointer;font-weight:600;padding:14px 18px;border-radius:12px;'>Ver razonamiento interno <span style='font-size:1.1em;'>&#x1F914;</span></summary><div style='padding:14px 18px;color:#ffe082;'>${marked.parse(razonamientoFiltrado)}</div></details>`;
+                }
+                msgDiv.innerHTML = responseTypeIndicator + razonamientoHtml + html;
+                // Sugerencias de respuesta usando historial y topic
+                let suggestions = [];
+                // Obtener historial y topic
+                let chatHistoryForSuggestions = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+                let topic = '';
+                let topicSelect = document.getElementById('topic');
+                if (topicSelect) topic = topicSelect.value;
+                // Buscar palabras clave en historial
+                // Definir categorías de sugerencias
+                const sugerenciasPorCategoria = {
+                    estudio: [
+                        //'¿Prefieres aprender con videos, ejercicios prácticos o ejemplos?',
+                        //'¿Te gustaría ver casos de estudio reales sobre este tema?',
+                        'Quiero practicar con ejercicios interactivos'
+                    ],
+                    recursos: [
+                        topic ? 
+                        `Quiero más recursos para aprender ${topic}` : 'Qué tipo de recursos de aprendizaje prefieres',
+                        //'¿¿Quiero acceder a herramientas prácticas para este tema?',
+                        //'¿Prefieres recursos en español o en inglés?'
+                    ],
+                    profundizar: [
+                        'Quiero explorar más a fondo',
+                        'Quiero ver ejemplos más avanzados',
+                        //'¿Quiero que profundicemos en algún concepto en particular?'
+                    ]
+                };
+
+                // Analizar el contenido actual y el historial
+                const contenidoCompleto = (mainContent + ' ' + chatHistoryForSuggestions.map(msg => msg.content).join(' ')).toLowerCase();
+
+                // Seleccionar sugerencias relevantes basadas en el contenido
+                if (contenidoCompleto.match(/cómo|aprender|estudiar|entender/i)) {
+                    suggestions.push(...sugerenciasPorCategoria.estudio);
+                }
+
+                if (contenidoCompleto.match(/recursos|materiales|herramientas|ejemplos/i)) {
+                    suggestions.push(...sugerenciasPorCategoria.recursos);
+                }
+
+                if (contenidoCompleto.match(/profundizar|avanzado|más sobre|detalles/i)) {
+                    suggestions.push(...sugerenciasPorCategoria.profundizar);
+                }
+
+                // Si hay menciones específicas, agregar sugerencias contextuales
+                if (contenidoCompleto.match(/análisis|práctica|ejercicio/i)) {
+                    suggestions.push('Quiero hacer ejercicios prácticos sobre este tema.');
+                }
+
+                if (contenidoCompleto.match(/duda|pregunta|no entiendo/i)) {
+                    suggestions.push('Quiero aclarar algún concepto específico.');
+                }
+
+                if (contenidoCompleto.match(/ejemplo|caso|aplicación/i)) {
+                    suggestions.push('Quiero ver más ejemplos de aplicación práctica.');
+                }
+                // Eliminar duplicados
+                suggestions = [...new Set(suggestions)];
+                // Si hay sugerencias, mostrar tabla
+                if (suggestions.length > 0) {
+                    let tableHtml = `<div style='margin-top:18px;'><b style='color:#ffd600;'>Sugerencias para tu respuesta:</b><table style='width:100%;margin-top:8px;background:#232a34;border-radius:10px;'><tbody>`;
+                    suggestions.forEach(s => {
+                        tableHtml += `<tr><td style='padding:10px 18px;color:#eaf6ff;border-bottom:1px solid #444;cursor:pointer;' onclick="document.querySelector('input[type=text]').value='${s.replace(/'/g, "\'\n")}'">${s}</td></tr>`;
+                    });
+                    tableHtml += '</tbody></table></div>';
+                    msgDiv.innerHTML += tableHtml;
+                    
+                    // Auto-scroll después de agregar sugerencias
+                    const chatArea = document.querySelector('.flex-1.overflow-y-auto');
+                    if (chatArea) {
+                        chatArea.scrollTop = chatArea.scrollHeight;
+                    }
+                }
+                
+                // 📚 MOSTRAR FUENTES AL FINAL DE LA RESPUESTA
+                if (window.lastResponseSources && window.lastResponseSources.length > 0) {
+                    let sourcesHtml = `
+                        <div style='margin-top:24px; padding:16px; background:#1a2332; border-radius:12px; border-left:4px solid #4a90e2;'>
+                            <h4 style='color:#4a90e2; margin:0 0 12px 0; font-size:1rem; display:flex; align-items:center; gap:8px;'>
+                                📚 <strong>Fuentes consultadas</strong>
+                            </h4>
+                            <div style='space-y:8px;'>
+                    `;
+                    
+                    window.lastResponseSources.forEach((source, index) => {
+                        const relevanceColor = source.relevance > 70 ? '#50e3c2' : source.relevance > 50 ? '#ffd600' : '#ff9500';
+                        sourcesHtml += `
+                            <div style='background:#0f1823; border:1px solid #334155; border-radius:8px; padding:12px; margin-bottom:8px;'>
+                                <div style='display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;'>
+                                    <div style='display:flex; align-items:center; gap:8px;'>
+                                        <span style='font-size:1.1em;'>📄</span>
+                                        <span style='font-weight:600; color:#e2e8f0; font-size:0.9rem;'>${source.filename}</span>
+                                    </div>
+                                    <span style='background:${relevanceColor}; color:#1a1a1a; padding:3px 8px; border-radius:10px; font-size:0.75rem; font-weight:600;'>
+                                        ${source.relevance}% relevante
+                                    </span>
+                                </div>
+                                <div style='font-size:0.8rem; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;'>
+                                    <span>Tema: ${source.topic}</span>
+                                    ${source.page !== 'N/A' ? `<span>Página: ${source.page}</span>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    sourcesHtml += `
+                            </div>
+                            <div style='margin-top:12px; font-size:0.75rem; color:#64748b; font-style:italic;'>
+                                💡 Información extraída de ${window.lastResponseSources.length} fragmento${window.lastResponseSources.length > 1 ? 's' : ''} de documentos subidos
+                            </div>
+                        </div>
+                    `;
+                    
+                    msgDiv.innerHTML += sourcesHtml;
+                    
+                    // Limpiar las fuentes para la próxima respuesta
+                    window.lastResponseSources = null;
+                    
+                    // Auto-scroll final después de agregar fuentes
+                    const chatArea = document.querySelector('.flex-1.overflow-y-auto');
+                    if (chatArea) {
+                        chatArea.scrollTop = chatArea.scrollHeight;
+                    }
+                }
+                // Guardar en el histórico la respuesta del tutor (SOLO guardar, no mostrar)
+                let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+                chatHistory.push({ content: mainContent, className: 'tutor-bubble', timestamp: Date.now() });
+                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+                
+                // Actualizar reliability score si existe
+                if (window.lastReliabilityScore !== undefined) {
+                    const score = window.lastReliabilityScore;
+                    const scoreSpan = document.getElementById('reliabilityScore');
+                    const bar = document.getElementById('reliabilityBar');
+                    if (scoreSpan && bar) {
+                        scoreSpan.textContent = score + '%';
+                        bar.style.width = score + '%';
+                    }
+                }
+            }
+        } else if (canvasMode) {
+            // Mostrar la respuesta en el canvas
+            const monitor = document.getElementById('canvasMonitor');
+            let content = responseContent;
+            // Si contiene <think>, separar razonamiento y respuesta
+            let thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+            let razonamiento = thinkMatch ? thinkMatch[1].trim() : '';
+            let respuesta = thinkMatch ? content.replace(/<think>[\s\S]*?<\/think>/, '').replace('AI Tutor:', '').trim() : content.replace('AI Tutor:', '').trim();
+            let rendered = '';
+            if (razonamiento) {
+                rendered += `<details style='background:#333;border-radius:12px;padding:0 0 0 0;margin-bottom:12px;' closed><summary style='color:#ffd600;cursor:pointer;font-weight:600;padding:14px 18px;border-radius:12px;'>Ver razonamiento interno <span style='font-size:1.1em;'>&#x1F914;</span></summary><div style='padding:14px 18px;color:#ffe082;'>${razonamiento}</div></details>`;
+            }
+            rendered += `<div style='color:#00bfae;margin-bottom:12px;'>${marked.parse(respuesta)}</div>`;
+            monitor.innerHTML += `<div style='margin-top:18px;'><b style='color:#00bfae;'>AI Tutor:</b><br>${rendered}</div>`;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        timerDiv.innerHTML = '❌ Error en la respuesta';
+        setTimeout(() => { timerDiv.style.display = 'none'; }, 3500);
+        clearInterval(timerInterval);
+        
+        // 🛡️ Manejo específico para contenido filtrado (error 400)
+        if (error.message && error.message.includes('400')) {
+            appendMessage("🛡️ Contenido no permitido. Por favor, hazme una pregunta educativa sobre temas como matemáticas, ciencias, programación, historia, literatura, economía, etc.", "filtered-bubble");
+        } else {
+            appendMessage("Error de conexión - Failed to get response", "error-bubble");
+        }
+    }
+}
+
+function renderMessage(content, className) {
+    // Función para renderizar mensajes sin guardar en localStorage (para cargar historial)
+    const chatArea = document.querySelector('.flex-1.overflow-y-auto');
+    if (!chatArea) return;
+    let wrapper = document.createElement('div');
+    wrapper.className = 'flex items-start gap-4 mb-4';
+    let avatar = document.createElement('div');
+    avatar.className = 'w-10 h-10 rounded-full bg-cover bg-center shrink-0';
+    let bubble = document.createElement('div');
+    bubble.className = 'flex flex-col';
+    let name = document.createElement('span');
+    name.className = 'font-bold text-[var(--text-primary)] mb-1';
+    let msg;
+    
+    if (className === 'tutor-bubble') {
+        let respuesta = content
+            .replace('AI Tutor:', '')
+            .replace(/\[USED_FILES:[^\]]*\]/g, '')
+            .replace(/\[SOURCES:[^\]]*\]/g, '')
+            .replace(/\[SCORE:[^\]]*\]/g, '')
+            .replace(/\[EVAL:[^\]]*\]/g, '')
+            // Filtros mejorados para limpiar información cruda
+            .replace(/,?\s*"avg_relevance":\s*[0-9.]+/g, '')
+            .replace(/,?\s*"max_relevance":\s*[0-9.]+/g, '')
+            .replace(/\}\]\]\]/g, '')
+            .replace(/^\s*,\s*/, '')  // Remover coma inicial
+            .replace(/^[,\s\]{}]+/, '') // Remover caracteres residuales al inicio
+            .trim();
+        
+        // Detectar si la respuesta realmente usa archivos de la base de conocimientos
+        let usedFilesMatch = content.match(/\[USED_FILES:([^\]]*)\]/);
+        let hasRealSources = usedFilesMatch && usedFilesMatch[1].trim() !== '[]' && usedFilesMatch[1].trim() !== '';
+        
+        msg = document.createElement('div');
+        msg.className = 'chat-bubble ' + className;
+        msg.style.maxWidth = '900px';
+        msg.style.margin = '0 auto 18px auto';
+        msg.style.boxShadow = '0 4px 24px #0003';
+        msg.style.borderRadius = '18px';
+        msg.style.padding = '28px 32px';
+        
+        // Agregar indicador de tipo de respuesta solo si hay fuentes reales
+        if (hasRealSources) {
+            let indicator = document.createElement('div');
+            indicator.style.background = '#0f2027';
+            indicator.style.border = '1px solid #4a90e2';
+            indicator.style.borderRadius = '8px';
+            indicator.style.padding = '8px 12px';
+            indicator.style.marginBottom = '16px';
+            indicator.style.fontSize = '0.85rem';
+            indicator.innerHTML = '📚 <strong style="color:#4a90e2;">Basado en los archivos de mi conocimiento</strong> - Esta respuesta utiliza información de documentos subidos';
+            msg.appendChild(indicator);
+        }
+        
+        let mdDiv = document.createElement('div');
+        mdDiv.style.overflowX = 'auto';
+        mdDiv.style.width = '100%';
+        mdDiv.className = 'markdown-body';
+        mdDiv.innerHTML = makeSourcesClickable(marked.parse(respuesta), hasRealSources);
+        msg.appendChild(mdDiv);
+        
+        // AI Tutor: izquierda
+        avatar.style.backgroundImage = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuApme4QoQtozt4j9VZTEaiVJjlQYSJ7pTbQjl2Ab8bWeJ-Rfem4Eg4Ea271jU2xx55lNrQGzcd0liGNA9nwTpmt4Gl4-_sOAu_4pvykcaUS89ohZSAmCaRRT4_uTbATEx-V82UlIHedbpc2JBKUElabFJxMYripRyL_u0-vYoPStya4ae3wWZvQPFzF8lu9VL84ZZ3NpIL0eSWNiHGE0YqGi1x9QKTz0pjmhM34wCNlvOzK1u91AECJDY8LEBKHZXQpSS1NQ9tbWcE')";
+        let teacherSelect = document.getElementById('teacher');
+        let teacherName = teacherSelect ? teacherSelect.value : '';
+        name.textContent = `AI Tutor${teacherName ? ' (' + teacherName + ')' : ''}`;
+        bubble.classList.add('items-start');
+        bubble.appendChild(name);
+        bubble.appendChild(msg);
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+    } else if (className === 'user-bubble') {
+        // User: derecha
+        msg = document.createElement('div');
+        msg.className = 'chat-bubble ' + className;
+        msg.textContent = content;
+        avatar.style.backgroundImage = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBbEjeT8Lccz4LCglC-n_A5-c1Mzb513abAAuZCjr91AQPr58pgjgMcu7ERZl4DdAiD2vJ2cguHqK3GAxZlgrGmsp3cFs0W6kvzHiOniJC0gVG9qkRHsuDjLHYKA7y9bcT1UHgMh-OHvfn0hDIiWyB_l3WD1cbwckIXkKghYKSaXOpi9E2xtqqyun5M9AzYb2SVBSA1srdDZ5JwiPj4jejfnxonaRG0miFHKPB83wKU7OtDJjghhlqAnHUhk1eoAb4ZTpy2ubnPbWs')";
+        name.textContent = 'You';
+        bubble.classList.add('items-end');
+        bubble.appendChild(name);
+        bubble.appendChild(msg);
+        wrapper.classList.add('justify-end'); // Agregar clase para justificar a la derecha
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(avatar);
+    }
+    
+    chatArea.appendChild(wrapper);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function appendMessage(content, className) {
+    // Guardar mensaje en localStorage
+    let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+    chatHistory.push({ content, className, timestamp: Date.now() });
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    // Si la respuesta incluye un score, actualizar la barra y el valor
+    if (window.lastReliabilityScore !== undefined) {
+        const score = window.lastReliabilityScore;
+        const scoreSpan = document.getElementById('reliabilityScore');
+        const bar = document.getElementById('reliabilityBar');
+        if (scoreSpan && bar) {
+            scoreSpan.textContent = score + '%';
+            bar.style.width = score + '%';
+        }
+    }
+    // Habilitar los botones de acción cuando el modelo responde
+    if (document.getElementById('topicActions')) {
+        const btns = document.querySelectorAll('#topicActions button');
+        btns.forEach(btn => btn.disabled = false);
+    }
+    const chatArea = document.querySelector('.flex-1.overflow-y-auto');
+    if (!chatArea) return;
+    let wrapper = document.createElement('div');
+    wrapper.className = 'flex items-start gap-4 mb-4';
+    let avatar = document.createElement('div');
+    avatar.className = 'w-10 h-10 rounded-full bg-cover bg-center shrink-0';
+    let bubble = document.createElement('div');
+    bubble.className = 'flex flex-col';
+    let name = document.createElement('span');
+    name.className = 'font-bold text-[var(--text-primary)] mb-1';
+    let msg;
+    if (className === 'tutor-bubble' && content.includes('<think>')) {
+        // Extraer razonamiento y respuesta principal, filtrando SCORE
+        let thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+        let razonamiento = thinkMatch ? thinkMatch[1]
+            .replace(/\[SCORE:[^\]]*\]/g, '')
+            .replace(/\[EVAL:[^\]]*\]/g, '')
+            .trim() : '';
+        let respuesta = content
+            .replace(/<think>[\s\S]*?<\/think>/, '')
+            .replace(/\[SCORE:[^\]]*\]/g, '')
+            .replace(/\[EVAL:[^\]]*\]/g, '')
+            .replace(/\[USED_FILES:[^\]]*\]/g, '')
+            .replace(/\[SOURCES:[^\]]*\]/g, '')
+            .replace('AI Tutor:', '')
+            .trim();
+        // Corregir doble barra en fórmulas LaTeX
+        respuesta = respuesta.replace(/\\\[/g, '\[').replace(/\\\]/g, '\]');
+        
+        print(respuesta);
+
+        // Bloque colapsable para razonamiento, con markdown y estilo uniforme
+        let details = document.createElement('details');
+        details.style.background = '#232a34';
+        details.style.borderRadius = '14px';
+        details.style.marginTop = '18px';
+        details.style.marginBottom = '8px';
+        details.style.boxShadow = '0 2px 12px #0002';
+        let summary = document.createElement('summary');
+        summary.textContent = 'Mostrar razonamiento 🧠';
+        summary.style.color = '#ffd600';
+        summary.style.cursor = 'pointer';
+        summary.style.fontWeight = '600';
+        summary.style.padding = '14px 18px';
+        summary.style.borderRadius = '14px';
+        details.appendChild(summary);
+        let razonDiv = document.createElement('div');
+        razonDiv.style.padding = '14px 18px';
+        razonDiv.style.color = '#ffe082';
+        razonDiv.style.background = 'transparent';
+        razonDiv.style.fontSize = '1.05em';
+        razonDiv.className = 'markdown-body';
+        razonDiv.innerHTML = makeSourcesClickable(marked.parse(razonamiento), false); // Sin enlaces en razonamiento
+        details.appendChild(razonDiv);
+        msg = document.createElement('div');
+        msg.className = 'chat-bubble ' + className;
+        msg.style.maxWidth = '900px';
+        msg.style.margin = '0 auto 18px auto';
+        msg.style.boxShadow = '0 4px 24px #0003';
+        msg.style.borderRadius = '18px';
+        msg.style.padding = '28px 32px';
+        msg.appendChild(details);
+        let mdDiv = document.createElement('div');
+        mdDiv.style.overflowX = 'auto';
+        mdDiv.style.width = '100%';
+        mdDiv.className = 'markdown-body';
+        
+        // Detectar si hay fuentes reales
+        let usedFilesMatch = content.match(/\[USED_FILES:([^\]]*)\]/);
+        let hasRealSources = usedFilesMatch && usedFilesMatch[1].trim() !== '[]' && usedFilesMatch[1].trim() !== '';
+        
+        // Renderizar con marked y hacer fuentes clicables
+        mdDiv.innerHTML = makeSourcesClickable(marked.parse(respuesta), hasRealSources);
+        msg.appendChild(mdDiv);
+        // Botón copiar
+        let copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-tutor-btn';
+        copyBtn.innerHTML = '📋 Copiar';
+        copyBtn.title = 'Copiar toda la respuesta';
+        copyBtn.onclick = function() {
+            navigator.clipboard.writeText(respuesta);
+            updateStatusBar('Respuesta copiada');
+        };
+        msg.appendChild(copyBtn);
+        // Botón Descargar MP3
+        let mp3Btn = document.createElement('button');
+        mp3Btn.className = 'MP3-tutor-btn';
+        //icono descarga de AUDIO
+        mp3Btn.innerHTML = '🎵 Descargar MP3';
+        mp3Btn.title = 'Descargar MP3 toda la respuesta';
+       
+        mp3Btn.onclick = function() {
+             alert('Para descargar el MP3, asegúrate de que tu navegador soporte la API de SpeechSynthesis.');
+        alert(respuesta);
+            let utter = new SpeechSynthesisUtterance(respuesta);
+            utter.lang = 'es-ES';
+            utter.onstart = function() {
+                updateStatusBar('Generando MP3...');
+            };
+            utter.onend = function() {
+                updateStatusBar('MP3 generado y descargado');
+            };
+            window.speechSynthesis.download(utter, 'respuesta.mp3');
+        };  
+        msg.appendChild(mp3Btn);
+        // Botón escuchar solo la respuesta principal
+        let speakBtn = document.createElement('button');
+        speakBtn.innerHTML = '🔊';
+        speakBtn.title = 'Descargar Respuesta';
+        speakBtn.style.marginLeft = '8px';
+        speakBtn.onclick = function() {
+            let utter = new SpeechSynthesisUtterance(respuesta);
+            utter.lang = 'es-ES';
+            window.speechSynthesis.download(utter);
+            updateStatusBar('Reproduciendo respuesta...');
+        };
+        msg.appendChild(speakBtn);
+    } else if (className === 'tutor-bubble') {
+        let respuesta = content
+            .replace('AI Tutor:', '')
+            .replace(/\[USED_FILES:[^\]]*\]/g, '')
+            .replace(/\[SOURCES:[^\]]*\]/g, '')
+            .replace(/\[SCORE:[^\]]*\]/g, '')
+            .replace(/\[EVAL:[^\]]*\]/g, '')
+            // Filtros mejorados para limpiar información cruda
+            .replace(/,?\s*"avg_relevance":\s*[0-9.]+/g, '')
+            .replace(/,?\s*"max_relevance":\s*[0-9.]+/g, '')
+            .replace(/\}\]\]\]/g, '')
+            .replace(/^\s*,\s*/, '')  // Remover coma inicial
+            .replace(/^[,\s\]{}]+/, '') // Remover caracteres residuales al inicio
+            .trim();
+        
+        // Detectar si la respuesta realmente usa archivos de la base de conocimientos
+        let usedFilesMatch = content.match(/\[USED_FILES:([^\]]*)\]/);
+        let hasRealSources = usedFilesMatch && usedFilesMatch[1].trim() !== '[]' && usedFilesMatch[1].trim() !== '';
+        
+        msg = document.createElement('div');
+        msg.className = 'chat-bubble ' + className;
+        msg.style.maxWidth = '900px';
+        msg.style.margin = '0 auto 18px auto';
+        msg.style.boxShadow = '0 4px 24px #0003';
+        msg.style.borderRadius = '18px';
+        msg.style.padding = '28px 32px';
+        
+        // Agregar indicador de tipo de respuesta solo si hay fuentes reales
+        if (hasRealSources) {
+            let indicator = document.createElement('div');
+            indicator.style.background = '#0f2027';
+            indicator.style.border = '1px solid #4a90e2';
+            indicator.style.borderRadius = '8px';
+            indicator.style.padding = '8px 12px';
+            indicator.style.marginBottom = '16px';
+            indicator.style.fontSize = '0.85rem';
+            indicator.innerHTML = '📚 <strong style="color:#4a90e2;">Basado en los archivos de mi conocimiento</strong> - Esta respuesta utiliza información de documentos subidos';
+            msg.appendChild(indicator);
+        }
+        
+        let mdDiv = document.createElement('div');
+        mdDiv.style.overflowX = 'auto';
+        mdDiv.style.width = '100%';
+        mdDiv.className = 'markdown-body';
+        mdDiv.innerHTML = makeSourcesClickable(marked.parse(respuesta), hasRealSources);
+        msg.appendChild(mdDiv);
+        // Botón copiar
+        let copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-tutor-btn';
+        copyBtn.innerHTML = '📋 Copiar';
+        copyBtn.title = 'Copiar toda la respuesta';
+        copyBtn.onclick = function() {
+            navigator.clipboard.writeText(respuesta);
+            updateStatusBar('Respuesta copiada');
+        };
+        msg.appendChild(copyBtn);
+        // Botón escuchar solo la respuesta principal
+        let speakBtn = document.createElement('button');
+        speakBtn.innerHTML = '🔊';
+        speakBtn.title = 'Escuchar Respuesta';
+        speakBtn.style.marginLeft = '8px';
+        speakBtn.onclick = function() {
+            let plainText = respuesta.replace(/<[^>]+>/g, '').replace(/[*_`#>-]/g, '').replace(/\n+/g, ' ').trim();
+            let utter = new SpeechSynthesisUtterance(plainText);
+            utter.lang = 'es-ES';
+            window.speechSynthesis.speak(utter);
+            updateStatusBar('Reproduciendo respuesta...');
+        };
+        msg.appendChild(speakBtn);
+    } else if (className === 'error-bubble') {
+        // Mensaje de error con estilo específico
+        msg = document.createElement('div');
+        msg.className = 'chat-bubble error-bubble';
+        msg.style.maxWidth = '900px';
+        msg.style.margin = '0 auto 18px auto';
+        msg.style.backgroundColor = '#442222';
+        msg.style.color = '#ffcccc';
+        msg.style.borderRadius = '18px';
+        msg.style.padding = '28px 32px';
+        msg.style.border = '2px solid #ff5252';
+        msg.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.5em;">⚠️</span><div><strong>Error de conexión</strong><br>${content}</div></div>`;
+    } else if (className === 'filtered-bubble') {
+        // Mensaje de contenido filtrado con estilo específico
+        msg = document.createElement('div');
+        msg.className = 'chat-bubble filtered-bubble';
+        msg.style.maxWidth = '900px';
+        msg.style.margin = '0 auto 18px auto';
+        msg.style.backgroundColor = '#2d1b1b';
+        msg.style.color = '#ffcccc';
+        msg.style.borderRadius = '18px';
+        msg.style.padding = '28px 32px';
+        msg.style.border = '2px solid #ff6b6b';
+        msg.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.5em;">🛡️</span><div><strong>Contenido Filtrado</strong><br>${content}</div></div>`;
+    } else {
+        msg = document.createElement('div');
+        msg.className = 'chat-bubble ' + className;
+        msg.textContent = content;
+    }
+
+    if (className === 'user-bubble') {
+        // Usuario: derecha
+        wrapper.classList.add('justify-end');
+        avatar.style.backgroundImage = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBbEjeT8Lccz4LCglC-n_A5-c1Mzb513abAAuZCjr91AQPr58pgjgMcu7ERZl4DdAiD2vJ2cguHqK3GAxZlgrGmsp3cFs0W6kvzHiOniJC0gVG9qkRHsuDjLHYKA7y9bcT1UHgMh-OHvfn0hDIiWyB_l3WD1cbwckIXkKghYKSaXOpi9E2xtqqyun5M9AzYb2SVBSA1srdDZ5JwiPj4jejfnxonaRG0miFHKPB83wKU7OtDJjghhlqAnHUhk1eoAb4ZTpy2ubnPbWs')";
+        name.textContent = 'You';
+        bubble.classList.add('items-end');
+        bubble.appendChild(name);
+        bubble.appendChild(msg);
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(avatar);
+    } else {
+        // AI Tutor: izquierda
+        avatar.style.backgroundImage = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuApme4QoQtozt4j9VZTEaiVJjlQYSJ7pTbQjl2Ab8bWeJ-Rfem4Eg4Ea271jU2xx55lNrQGzcd0liGNA9nwTpmt4Gl4-_sOAu_4pvykcaUS89ohZSAmCaRRT4_uTbATEx-V82UlIHedbpc2JBKUElabFJxMYripRyL_u0-vYoPStya4ae3wWZvQPFzF8lu9VL84ZZ3NpIL0eSWNiHGE0YqGi1x9QKTz0pjmhM34wCNlvOzK1u91AECJDY8LEBKHZXQpSS1NQ9tbWcE')";
+    let teacherSelect = document.getElementById('teacher');
+    let teacherName = teacherSelect ? teacherSelect.value : '';
+    name.textContent = `AI Tutor${teacherName ? ' (' + teacherName + ')' : ''}`;
+        bubble.classList.add('items-start');
+        bubble.appendChild(name);
+        bubble.appendChild(msg);
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+    }
+    chatArea.appendChild(wrapper);
+    
+    // Auto-scroll suave al final del chat
+    chatArea.scrollTop = chatArea.scrollHeight;
+    
+    // Scroll adicional después de un pequeño delay para asegurar que el contenido se renderice
+    setTimeout(() => {
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }, 100);
+ 
+}
+
+// Al cargar la página, restaurar el historial del chat desde localStorage
+window.addEventListener('DOMContentLoaded', () => {
+    const chatArea = document.querySelector('.flex-1.overflow-y-auto');
+    if (!chatArea) return;
+    chatArea.innerHTML = '';
+    
+    // Función para cargar mensajes en lotes
+    function loadMessageBatch(messages, startIndex, batchSize) {
+        if (startIndex >= messages.length) return;
+        
+        const endIndex = Math.min(startIndex + batchSize, messages.length);
+        const batch = messages.slice(startIndex, endIndex);
+        
+        batch.forEach(msg => {
+            renderMessage(msg.content, msg.className); // Usar renderMessage en lugar de appendMessage
+        });
+        
+        // Procesar siguiente lote después de un delay
+        if (endIndex < messages.length) {
+            setTimeout(() => {
+                loadMessageBatch(messages, endIndex, batchSize);
+            }, 100);
+        }
+    }
+    
+    // Cargar historial del chat
+    let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+    // Limitar el historial si es muy largo
+    if (chatHistory.length > 50) {
+        chatHistory = chatHistory.slice(-50);
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    }
+    // Cargar mensajes en lotes de 5
+    loadMessageBatch(chatHistory, 0, 5);
+    
+    // Botón para borrar el chat
+    document.getElementById('clearChatBtn').onclick = function() {
+        localStorage.removeItem('chatHistory');
+        chatArea.innerHTML = '';
+        updateStatusBar('Historial de chat borrado');
+    };
+});
+
+// ===== GESTIÓN DE ARCHIVOS DE CONOCIMIENTO =====
+
+let currentKnowledgeFiles = [];
+let usedFilesInLastResponse = [];
+
+// Cargar archivos por tema
+async function loadKnowledgeFiles(topic = null) {
+    try {
+        const indicator = document.getElementById('knowledgeIndicator');
+        const statusText = document.getElementById('knowledgeStatusText');
+        
+        // Mostrar estado de carga
+        indicator.className = 'w-3 h-3 bg-yellow-500 rounded-full animate-pulse';
+        statusText.textContent = 'Cargando archivos...';
+        
+        const currentTopic = topic || document.getElementById('topic').value;
+        console.log('📚 Cargando archivos para tema:', currentTopic);
+        
+        const response = await fetch(`/api/files-by-topic?topic=${encodeURIComponent(currentTopic)}`);
+        const data = await response.json();
+        
+        console.log('📊 Respuesta del servidor:', data);
+        
+        if (data.success === true) {
+            currentKnowledgeFiles = data.files;
+            updateKnowledgeDisplay(data.files, currentTopic);
+            
+            // Actualizar indicador
+            if (data.files.length > 0) {
+                indicator.className = 'w-3 h-3 bg-green-500 rounded-full';
+                statusText.textContent = `${data.files.length} archivo(s) disponible(s)`;
+            } else {
+                indicator.className = 'w-3 h-3 bg-gray-500 rounded-full';
+                statusText.textContent = 'Sin archivos para este tema';
+            }
+        } else {
+            console.error('Error cargando archivos:', data.error);
+            indicator.className = 'w-3 h-3 bg-red-500 rounded-full';
+            statusText.textContent = 'Error cargando archivos';
+            // Mostrar mensaje vacío con opción de subir archivos
+            updateKnowledgeDisplay([], currentTopic);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('knowledgeIndicator').className = 'w-3 h-3 bg-red-500 rounded-full';
+        document.getElementById('knowledgeStatusText').textContent = 'Error de conexión';
+        // Mostrar mensaje de error con opción de reintentar
+        const currentTopic = topic || document.getElementById('topic').value;
+        updateKnowledgeDisplay([], currentTopic);
+    }
+}
+
+// Actualizar visualización de archivos
+function updateKnowledgeDisplay(files, topic) {
+    const container = document.getElementById('currentTopicFiles');
+    
+    console.log('🎯 Actualizando display con', files.length, 'archivos');
+    console.log('📍 Container element:', container);
+    
+    if (files.length === 0) {
+        container.innerHTML = `
+            <div class="text-sm text-[var(--text-secondary)] text-center py-4">
+                <p>📁 Sin archivos para "${topic}"</p>
+                <p class="mt-2"><a href="/upload" class="text-[var(--primary-color)] hover:underline">Sube archivos para este tema</a></p>
+            </div>
+        `;
+        return;
+    }
+    
+    const htmlContent = files.map(file => {
+        console.log('📄 Procesando archivo:', file);
+        return `
+        <div class="bg-[var(--background-dark)] p-3 rounded-lg border border-[var(--border-color)] mb-2">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-[var(--text-primary)]">📄 ${truncateFileName(file.filename)}</span>
+                        <span class="px-2 py-1 bg-green-900 text-green-300 text-xs rounded-full">${file.status}</span>
+                    </div>
+                    <div class="mt-1 text-xs text-[var(--text-secondary)]">
+                        <div>📊 ${file.chunks} chunks procesados</div>
+                        <div>🏷️ Tema: ${file.topic}</div>
+                        <div>📅 ${file.upload_date}</div>
+                    </div>
+                </div>
+                <div class="w-4 h-4 bg-green-500 rounded-full flex-shrink-0" title="Archivo disponible para consultas"></div>
+            </div>
+        </div>`;
+    }).join('');
+    
+    console.log('🎨 HTML generado:', htmlContent);
+    container.innerHTML = htmlContent;
+    console.log('✅ HTML insertado en container');
+}
+
+// Truncar nombres de archivo largos
+function truncateFileName(fileName) {
+    if (fileName.length > 25) {
+        const ext = fileName.split('.').pop();
+        const name = fileName.substring(0, fileName.lastIndexOf('.'));
+        return name.substring(0, 20) + '...' + ext;
+    }
+    return fileName;
+}
+
+// Mostrar archivos usados en la última respuesta
+function showUsedFiles(files) {
+    usedFilesInLastResponse = files;
+    const section = document.getElementById('usedInLastResponse');
+    const container = document.getElementById('usedFilesList');
+    
+    if (files.length > 0) {
+        section.style.display = 'block';
+        container.innerHTML = files.map(file => `
+            <div class="flex items-center gap-2 text-xs text-[var(--accent-color)]">
+                <div class="w-2 h-2 bg-[var(--accent-color)] rounded-full"></div>
+                <span>📖 ${truncateFileName(file.filename)} (${file.chunks_used} fragmentos)</span>
+            </div>
+        `).join('');
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM Cargado, inicializando...');
+    
+    // Verificar que existen los elementos
+    const topicSelect = document.getElementById('topic');
+    const knowledgeIndicator = document.getElementById('knowledgeIndicator');
+    const currentTopicFiles = document.getElementById('currentTopicFiles');
+    
+    console.log('📋 Elementos encontrados:', {
+        topicSelect: !!topicSelect,
+        knowledgeIndicator: !!knowledgeIndicator,
+        currentTopicFiles: !!currentTopicFiles
+    });
+    
+    // Cargar archivos al inicio
+    console.log('🔄 Llamando a loadKnowledgeFiles...');
+    loadKnowledgeFiles();
+    
+    // Recargar archivos cuando cambie el tema
+    document.getElementById('topic').addEventListener('change', (e) => {
+        loadKnowledgeFiles(e.target.value);
+        // Ocultar archivos usados al cambiar tema
+        document.getElementById('usedInLastResponse').style.display = 'none';
+    });
+    
+    // Botón de actualizar
+    document.getElementById('refreshKnowledge').addEventListener('click', (e) => {
+        e.preventDefault();
+        loadKnowledgeFiles();
+    });
+    
+    // Botón de debug
+    document.getElementById('debugFiles').addEventListener('click', async (e) => {
+        e.preventDefault();
+        console.log('🐛 DEBUG: Iniciando debug manual...');
+        const topic = document.getElementById('topic').value;
+        console.log('🐛 DEBUG: Tema seleccionado:', topic);
+        
+        try {
+            const response = await fetch(`/api/files-by-topic?topic=${encodeURIComponent(topic)}`);
+            const data = await response.json();
+            console.log('🐛 DEBUG: Respuesta completa:', data);
+            
+            alert(`Debug Info:\nTema: ${topic}\nRespuesta: ${JSON.stringify(data, null, 2)}`);
+        } catch (error) {
+            console.error('🐛 DEBUG: Error:', error);
+            alert(`Error en debug: ${error.message}`);
+        }
+    });
+});
+
+// Función para actualizar la visualización de archivos de conocimiento utilizados
+function updateKnowledgeFiles(filesData) {
+    const knowledgeSection = document.getElementById('knowledge-files-section');
+    const filesList = document.getElementById('knowledge-files-list');
+    const filesStatus = document.getElementById('knowledge-files-status');
+    
+    if (!knowledgeSection || !filesList || !filesStatus) {
+        console.warn('Elementos de conocimiento no encontrados en el DOM');
+        return;
+    }
+    
+    if (filesData && filesData.length > 0) {
+        // Mostrar la sección
+        knowledgeSection.style.display = 'block';
+        
+        // Actualizar estado
+        filesStatus.innerHTML = `📚 <strong>${filesData.length}</strong> archivo${filesData.length > 1 ? 's' : ''} utilizado${filesData.length > 1 ? 's' : ''} en esta respuesta`;
+        
+        // Limpiar lista anterior
+        filesList.innerHTML = '';
+        
+        // Agregar cada archivo
+        filesData.forEach(file => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'knowledge-file-item';
+            fileItem.style.cssText = `
+                background: rgba(26, 54, 93, 0.8);
+                border: 1px solid #4a90e2;
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 8px;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            `;
+            
+            const uploadDate = new Date(file.upload_date).toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            
+            fileItem.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.2em;">📄</span>
+                        <span style="font-weight: 600; color: #87ceeb;">${file.filename}</span>
+                    </div>
+                    <span style="background: #4a90e2; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">
+                        ${file.chunks_used} fragmento${file.chunks_used > 1 ? 's' : ''}
+                    </span>
+                </div>
+                <div style="font-size: 0.8rem; color: #b0c4de; display: flex; justify-content: space-between;">
+                    <span>📁 ${file.topic}</span>
+                    <span>📅 ${uploadDate}</span>
+                </div>
+            `;
+            
+            // Efecto hover
+            fileItem.addEventListener('mouseenter', () => {
+                fileItem.style.transform = 'translateY(-2px)';
+                fileItem.style.boxShadow = '0 4px 15px rgba(74, 144, 226, 0.3)';
+            });
+            
+            fileItem.addEventListener('mouseleave', () => {
+                fileItem.style.transform = 'translateY(0)';
+                fileItem.style.boxShadow = 'none';
+            });
+            
+            filesList.appendChild(fileItem);
+        });
+    } else {
+        // Ocultar la sección si no hay archivos
+        knowledgeSection.style.display = 'none';
+    }
+}
+
+// Función global para actualizar archivos usados (llamada desde el streaming)
+window.updateUsedFiles = function(files) {
+    showUsedFiles(files);
+};
+
+</script>
+</body></html>
