@@ -12,8 +12,7 @@
 1. **Clone the repository (if needed)**
    ```bash
    git clone <repository-url>
-   cd DeepSeek_chatbot
-   ```
+   
 
 2. **Create and activate a virtual environment**
    ```bash
@@ -36,14 +35,21 @@
    AZURE_ENDPOINT=https://your-azure-endpoint
    AZURE_KEY=your-azure-key
    ```
+5. Create a Pinecone Database
+Index_Name=educaia
+Metric=cosine
+Dimensions=1536
+Cloud=AWS
+Region=us-east-1
+Type=Dense
+Capacity mode=Serverless
+embedding_model=text-embedding-3-small
 
 ## Running the App
 
-The repository contains two main Python files:
+The repository contains main Python file:
 
-- **`chat.py`**: A standalone script demonstrating a simple Azure chat call.
 - **`app.py`**: A Flask web application that streams chat responses to a web client.
-
 To run the Flask web app locally, execute:
 ```bash
 python app.py
@@ -54,7 +60,7 @@ By default, the app will start on `http://127.0.0.1:5000/`.
 
 - Open your browser and navigate to `http://127.0.0.1:5000/`.
 - Type your message in the input box and press **Send**.
-- The app will display the response from Azure along with internal reasoning wrapped in `<think>...</think>`.
+
 
 ## Troubleshooting
 
